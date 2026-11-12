@@ -84,74 +84,75 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // البنر الملكي المختصر
+        // البنر الملكي الفاخر مع دمج الصورة الرئيسية بالذكاء الاصطناعي
         Container(
-          padding: const EdgeInsets.all(22),
+          height: 240,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF081F36), Color(0xFF0F385C)],
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-            ),
             borderRadius: BorderRadius.circular(24),
+            image: const DecorationImage(
+              image: AssetImage('assets/images/image_3.png'), // محلياً أو يظهر بالافتراضي/الشبكة كإسناد سحابي دقيق
+              fit: BoxFit.cover,
+            ),
             boxShadow: [
-              BoxShadow(color: AppColors.customerPrimary.withAlpha(40), blurRadius: 18, offset: const Offset(0, 8)),
+              BoxShadow(color: AppColors.customerPrimary.withAlpha(50), blurRadius: 18, offset: const Offset(0, 8)),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('خدمات | KHADAMAT', style: TextStyle(color: AppColors.syaanhOrange, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                      SizedBox(height: 2),
-                      Text('صيانة منزلك بضغطة زر', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-                    ],
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-                        icon: const Icon(Icons.emergency_rounded, size: 18),
-                        label: const Text('طوارئ 45 د'),
-                        onPressed: () {
-                          final o = state.triggerSosEmergencyOrder(
-                            serviceName: 'كهرباء',
-                            urgentDescription: 'طلب طوارئ سريع',
-                            address: state.selectedCity,
-                          );
-                          Navigator.pushNamed(context, AppRoutes.trackOrder, arguments: {'orderId': o.id});
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.syaanhOrange),
-                        icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                        label: const Text('تشخيص ذكي'),
-                        onPressed: () => AiSmartDiagnosisModal.show(context),
-                      ),
-                    ],
-                  ),
-                ],
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                colors: [Color(0xFF030A14).withAlpha(200), Color(0xFF041224).withAlpha(100)],
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
               ),
-              const SizedBox(height: 16),
-              TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'ابحث عن الخدمة (تكييف، سباكة، كهرباء...)',
-                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.syaanhOrange),
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Text('خدمات | KHADAMAT', style: TextStyle(color: AppColors.goldAccent, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                const SizedBox(height: 2),
+                const Text('صيانة منزلك بفخامة وأمان', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, height: 1.1)),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                      icon: const Icon(Icons.emergency_rounded, size: 16),
+                      label: const Text('طوارئ 45 د'),
+                      onPressed: () {
+                        final o = state.triggerSosEmergencyOrder(
+                          serviceName: 'كهرباء',
+                          urgentDescription: 'طلب طوارئ سريع',
+                          address: state.selectedCity,
+                        );
+                        Navigator.pushNamed(context, AppRoutes.trackOrder, arguments: {'orderId': o.id});
+                      },
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.goldAccent, foregroundColor: Colors.black),
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                      label: const Text('تشخيص ذكي'),
+                      onPressed: () => AiSmartDiagnosisModal.show(context),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // البحث السريع
+        TextField(
+          onChanged: (v) => setState(() => _searchQuery = v),
+          decoration: InputDecoration(
+            hintText: 'ابحث عن الخدمة (تكييف، سباكة، كهرباء...)',
+            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.syaanhOrange),
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(height: 14),
@@ -180,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 20),
 
-        // شبكة الأقسام الفاخرة (أيقونة بارزة + اسم القسم + السعر فقط)
+        // شبكة الأقسام الفاخرة مبنية بالصور لكل تخصص
         const Text('اختر الخدمة', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.customerPrimary)),
         const SizedBox(height: 10),
         LayoutBuilder(
@@ -193,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisCount: cols,
                 crossAxisSpacing: 14,
                 mainAxisSpacing: 14,
-                childAspectRatio: 1.25,
+                childAspectRatio: 1.12,
               ),
               itemCount: filtered.length,
               itemBuilder: (context, i) {
@@ -202,31 +203,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => Navigator.pushNamed(context, AppRoutes.createOrder, arguments: {'service': s.name}),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
+                      image: DecorationImage(
+                        image: NetworkImage(s.bgImageUrl),
+                        fit: BoxFit.cover,
+                      ),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withAlpha(6), blurRadius: 12, offset: const Offset(0, 4)),
+                        BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 12, offset: const Offset(0, 4)),
                       ],
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: s.color.withAlpha(22),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(s.icon, color: s.color, size: 30),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          colors: [Colors.black.withAlpha(160), Colors.black.withAlpha(20)],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
                         ),
-                        const SizedBox(height: 10),
-                        Text(s.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.customerPrimary)),
-                        const SizedBox(height: 4),
-                        Text('من ${s.priceRange}', style: const TextStyle(fontSize: 12, color: AppColors.syaanhOrange, fontWeight: FontWeight.w800)),
-                      ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(s.icon, color: AppColors.goldAccent, size: 18),
+                              const SizedBox(width: 6),
+                              Text(s.name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text('تبدأ من ${s.priceRange}', style: const TextStyle(fontSize: 12, color: AppColors.goldAccent, fontWeight: FontWeight.w800)),
+                        ],
+                      ),
                     ),
                   ),
                 );

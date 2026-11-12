@@ -9,6 +9,7 @@ class ServiceItemModel {
   final int inspectionFee;
   final IconData icon;
   final Color color;
+  final String bgImageUrl; // رابط الصورة التعبيرية لكل قسم
 
   ServiceItemModel({
     required this.id,
@@ -19,6 +20,7 @@ class ServiceItemModel {
     this.inspectionFee = 50,
     required this.icon,
     required this.color,
+    required this.bgImageUrl,
   });
 
   String get priceRange => '$minPrice ج.م';

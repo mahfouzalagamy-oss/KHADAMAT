@@ -38,9 +38,11 @@ jobs:
 
       - name: Analyze & Build KHADAMAT Web + Android APK
         run: |
-          flutter create --org com.khadamat.official --project-name khadamat_app --platforms android,web build_app
+          flutter create --org com.khadamat.official --project-name khamat_app --platforms android,web build_app
           rm -rf build_app/lib/*
           cp -r mobile_app/lib/* build_app/lib/
+          mkdir -p build_app/assets/images
+          cp mobile_app/assets/images/image_3.png build_app/assets/images/ 2>/dev/null || true
           rm -rf build_app/test
           cd build_app
           flutter pub add http

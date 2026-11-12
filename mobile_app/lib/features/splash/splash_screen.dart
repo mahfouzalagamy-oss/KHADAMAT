@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF051424), Color(0xFF081F36), Color(0xFF0F385C)],
+              colors: [Color(0xFF030A14), Color(0xFF041224), Color(0xFF091E34)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -60,60 +60,60 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 108,
-                      height: 108,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
                         color: AppColors.syaanhOrange,
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.syaanhOrange.withAlpha(110),
-                            blurRadius: 32,
+                            color: AppColors.syaanhOrange.withAlpha(120),
+                            blurRadius: 36,
                             spreadRadius: 4,
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.handyman_rounded, color: Colors.white, size: 58),
+                      child: const Icon(Icons.handyman_rounded, color: Colors.white, size: 54),
                     ),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: 28),
                     const Text(
                       'خدمات',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 56,
+                        fontSize: 54,
                         fontWeight: FontWeight.w900,
                         height: 1.05,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     const Text(
                       'KHADAMAT',
                       style: TextStyle(
-                        color: AppColors.syaanhOrange,
-                        fontSize: 26,
+                        color: AppColors.goldAccent,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 7.0,
+                        letterSpacing: 6.5,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 22),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(18),
+                        color: Colors.white.withAlpha(15),
                         borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.white24),
+                        border: Border.all(color: Colors.white10),
                       ),
                       child: const Text(
                         'صيانة منزلك بفخامة وأمان • ضمان 100%',
                         style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    const SizedBox(height: 44),
+                    const SizedBox(height: 52),
                     const SizedBox(
                       width: 140,
                       child: LinearProgressIndicator(
                         color: AppColors.syaanhOrange,
-                        backgroundColor: Colors.white12,
+                        backgroundColor: Colors.white10,
                         minHeight: 4,
                       ),
                     ),

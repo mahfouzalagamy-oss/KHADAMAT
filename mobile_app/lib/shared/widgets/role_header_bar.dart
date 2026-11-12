@@ -100,7 +100,7 @@ class RoleHeaderBar extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('خدمات', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0)),
-                        Text('KHADAMAT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.syaanhOrange, letterSpacing: 2.5)),
+                        Text('KHADAMAT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.goldAccent, letterSpacing: 2.5)),
                       ],
                     ),
                   ],

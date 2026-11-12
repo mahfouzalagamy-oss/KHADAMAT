@@ -15,7 +15,7 @@ class AppStateService extends ChangeNotifier {
   String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjY2d3b3NpbW1jd2Z3Y2ZmZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0OTY3MTMsImV4cCI6MjExMDA3MjcxM30.7w6V6RGpil3vZnDqyIE7G4X2IdaP6A4qu-akg0RRk-c';
   String geminiApiKey = '';
   bool isCloudConnected = false;
-  String lastSyncStatus = 'جاري الاتصال التلقائي بسحابة Supabase...';
+  String lastSyncStatus = 'جاري الاتصال...';
   Timer? _syncTimer;
 
   int currentRole = 0;
@@ -38,11 +38,6 @@ class AppStateService extends ChangeNotifier {
     'القاهرة',
     'الجيزة',
     'الإسكندرية',
-    'المنصورة',
-    'طنطا',
-    'الزقازيق',
-    'أسيوط',
-    'أسوان',
   ];
 
   final List<String> notifications = [
@@ -50,66 +45,67 @@ class AppStateService extends ChangeNotifier {
     'كاش باك 10% فوري وضمان 30 يوماً عند السداد الإلكتروني.',
   ];
 
+  // ربط الأقسام بصور تعبيرية احترافية بجودة عالية
   final List<ServiceItemModel> services = [
     ServiceItemModel(
       id: 'ac',
       name: 'تكييف وتبريد',
-      subtitle: 'شحن فريون • غسيل • صيانة',
+      subtitle: 'صيانة فريون وغسيل كيميائي وفحص تسريب',
       minPrice: 250,
       maxPrice: 650,
-      inspectionFee: 50,
       icon: Icons.ac_unit_rounded,
       color: const Color(0xFF0284C7),
+      bgImageUrl: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&q=80&w=400',
     ),
     ServiceItemModel(
       id: 'plumbing',
       name: 'سباكة',
-      subtitle: 'تسريبات • خلاطات • مواتير',
+      subtitle: 'كشف تسريبات وصيانة خلاطات ومواتير ضغط',
       minPrice: 150,
       maxPrice: 450,
-      inspectionFee: 50,
       icon: Icons.plumbing_rounded,
       color: const Color(0xFF081F36),
+      bgImageUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=400',
     ),
     ServiceItemModel(
       id: 'electric',
       name: 'كهرباء',
-      subtitle: 'أعطال • لوحات • إضاءة',
+      subtitle: 'تأسيس وصيانة أعطال وإنارة وكشف التماسات',
       minPrice: 150,
       maxPrice: 500,
-      inspectionFee: 50,
       icon: Icons.bolt_rounded,
       color: const Color(0xFFFF6B00),
+      bgImageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400',
     ),
     ServiceItemModel(
       id: 'appliances',
       name: 'أجهزة منزلية',
-      subtitle: 'غسالات • ثلاجات • سخانات',
+      subtitle: 'إصلاح غسالات وثلاجات وأفران وسخانات مياه',
       minPrice: 250,
       maxPrice: 700,
-      inspectionFee: 50,
       icon: Icons.kitchen_rounded,
       color: const Color(0xFF4F46E5),
+      bgImageUrl: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&q=80&w=400',
     ),
     ServiceItemModel(
       id: 'carpentry',
       name: 'نجارة وأقفال',
-      subtitle: 'أبواب • كوالين • مطابخ',
+      subtitle: 'فتح أبواب مصفحة وصيانة غرف وتغيير كوالين',
       minPrice: 200,
       maxPrice: 600,
-      inspectionFee: 50,
       icon: Icons.handyman_rounded,
       color: const Color(0xFF78350F),
+      bgImageUrl: 'https://images.unsplash.com/photo-1534224039826-c7a0eda0e6b3?auto=format&fit=crop&q=80&w=400',
     ),
     ServiceItemModel(
       id: 'cleaning',
       name: 'نظافة شاملة',
-      subtitle: 'منازل • خزانات • تعقيم',
+      subtitle: 'تعقيم وتنظيف عميق وخزانات ومكافحة حشرات',
       minPrice: 350,
       maxPrice: 1200,
-      inspectionFee: 50,
       icon: Icons.cleaning_services_rounded,
       color: const Color(0xFF10B981),
+      bgImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400',
     ),
   ];
 
@@ -214,25 +210,6 @@ class AppStateService extends ChangeNotifier {
       completedJobs: 94,
       isVerified: true,
       approvalStatus: 'approved',
-    ),
-    TechnicianItemModel(
-      id: 'TECH-3',
-      name: 'م. كريم طارق (طلب جديد)',
-      specialty: 'كهرباء',
-      city: 'الدوحة - قطر',
-      phone: '01099881122',
-      distanceKm: 1.5,
-      nationalId: '29611050108834',
-      idFrontPhoto: 'هوية_كريم_أمامي.jpg',
-      idBackPhoto: 'هوية_كريم_خلفي.jpg',
-      certificatePhoto: 'شهادة_خبرة_كهرباء.jpg',
-      experienceYears: 4,
-      walletNumber: '01099881122',
-      companyAffiliation: 'فني مستقل',
-      rating: 4.7,
-      completedJobs: 0,
-      isVerified: false,
-      approvalStatus: 'pending',
     ),
   ];
 
