@@ -17,7 +17,15 @@ class _TechnicianRegistrationScreenState extends State<TechnicianRegistrationScr
   final _nationalIdCtrl = TextEditingController();
   String _selectedSpecialty = 'تكييف وتبريد';
   String _idFrontFile = 'هوية_أمامي.jpg';
-  String _idBackFile = 'هوية_خلفي.jpg';
+  static const _idBackFile = 'هوية_خلفي.jpg';
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _nationalIdCtrl.dispose();
+    super.dispose();
+  }
 
   void _submit() {
     if (_nameCtrl.text.trim().isEmpty || _nationalIdCtrl.text.trim().isEmpty) {
