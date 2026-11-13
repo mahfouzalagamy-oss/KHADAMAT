@@ -24,6 +24,8 @@ jobs:
         with:
           channel: stable
           flutter-version: '3.29.3'
+      - name: Install Android API 36
+        run: sdkmanager 'platforms;android-36'
       - name: Prepare Android and web hosts
         run: |
           flutter create --no-pub --empty --org com.khadamat.official \
@@ -31,6 +33,9 @@ jobs:
           git diff --exit-code -- pubspec.yaml pubspec.lock lib test
           sed -i '/^<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' \
             android/app/src/main/AndroidManifest.xml
+          sed -i 's/version "8.7.0"/version "8.10.1"/' android/settings.gradle.kts
+          sed -i 's/gradle-8.10.2-all.zip/gradle-8.11.1-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/; s/targetSdk = flutter.targetSdkVersion/targetSdk = 36/' android/app/build.gradle.kts
           sed -i '/signingConfig = signingConfigs.getByName("debug")/d' android/app/build.gradle.kts
       - name: Resolve locked dependencies
         run: flutter pub get --enforce-lockfile
@@ -50,6 +55,7 @@ jobs:
           apk=build/app/outputs/flutter-apk/app-release.apk
           test -s "$apk"
           test "$("$apkanalyzer" manifest application-id "$apk")" = com.khadamat.official.khadamat_app
+          test "$("$apkanalyzer" manifest target-sdk "$apk")" = 36
           "$apkanalyzer" manifest permissions "$apk" | grep -Fx android.permission.INTERNET
           # Release compilation runs without a Play upload key on pull requests.
           bundles=(build/app/outputs/bundle/release/*.aab)
@@ -80,6 +86,26 @@ jobs:
             --ks-pass env:KHADAMAT_STORE_PASSWORD --key-pass env:KHADAMAT_KEY_PASSWORD \
             --out "$RUNNER_TEMP/khadamat-verification.apk" "$signing_dir/aligned.apk"
           "$sdk_tools/apksigner" verify "$RUNNER_TEMP/khadamat-verification.apk"
+          "$sdk_tools/zipalign" -c -P 16 -v 4 "$RUNNER_TEMP/khadamat-verification.apk"
+      - name: Verify native library alignment
+        run: |
+          native_dir="$(mktemp -d "$RUNNER_TEMP/khadamat-native.XXXXXX")"
+          bundle=build/app/outputs/bundle/release/app-release.aab
+          unzip -q "$bundle" 'base/lib/*/*.so' -d "$native_dir"
+          shopt -s nullglob
+          libs=("$native_dir"/base/lib/{arm64-v8a,x86_64}/*.so)
+          test "${#libs[@]}" -gt 0
+          for lib in "${libs[@]}"; do
+            headers="$(readelf -lW "$lib")"
+            mapfile -t alignments < <(awk '$1 == "LOAD" { print $NF }' <<< "$headers")
+            test "${#alignments[@]}" -gt 0
+            for alignment in "${alignments[@]}"; do
+              if (( alignment < 16384 )); then
+                echo "Insufficient 16 KB ELF alignment: ${lib#"$native_dir"/}"
+                exit 1
+              fi
+            done
+          done
       - name: Enable Android emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
@@ -89,7 +115,7 @@ jobs:
       - name: Install and launch on Android emulator
         uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
         with:
-          api-level: 35
+          api-level: 36
           arch: x86_64
           target: google_apis
           disable-animations: true
