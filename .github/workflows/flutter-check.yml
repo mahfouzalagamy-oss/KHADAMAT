@@ -25,7 +25,8 @@ jobs:
           channel: stable
           flutter-version: '3.29.3'
       - name: Install Android API 36
-        run: "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36'
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36'
       - name: Prepare Android and web hosts
         run: |
           flutter create --no-pub --empty --org com.khadamat.official \
