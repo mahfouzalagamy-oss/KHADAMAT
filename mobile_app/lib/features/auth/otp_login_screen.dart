@@ -27,7 +27,7 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(

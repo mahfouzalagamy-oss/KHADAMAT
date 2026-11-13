@@ -18,11 +18,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 950));
     _scaleAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack);
     _ctrl.forward();
 
-    _timer = Timer(const Duration(milliseconds: 2400), _goHome);
+    _timer = Timer(const Duration(milliseconds: 2500), _goHome);
   }
 
   void _goHome() {
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF030A14), Color(0xFF041224), Color(0xFF091E34)],
+              colors: [Color(0xFF030914), Color(0xFF07162C), Color(0xFF0F2C52)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -60,60 +60,65 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 110,
-                      height: 110,
+                      width: 116,
+                      height: 116,
                       decoration: BoxDecoration(
-                        color: AppColors.syaanhOrange,
-                        borderRadius: BorderRadius.circular(30),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF8008), Color(0xFFFF6B00)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: AppColors.goldAccent.withAlpha(140), width: 2),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.syaanhOrange.withAlpha(120),
-                            blurRadius: 36,
-                            spreadRadius: 4,
+                            blurRadius: 40,
+                            spreadRadius: 6,
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.handyman_rounded, color: Colors.white, size: 54),
+                      child: const Icon(Icons.handyman_rounded, color: Colors.white, size: 60),
                     ),
                     const SizedBox(height: 28),
                     const Text(
                       'خدمات',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 54,
+                        fontSize: 62,
                         fontWeight: FontWeight.w900,
-                        height: 1.05,
+                        height: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     const Text(
                       'KHADAMAT',
                       style: TextStyle(
                         color: AppColors.goldAccent,
-                        fontSize: 24,
+                        fontSize: 27,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 6.5,
+                        letterSpacing: 7.5,
                       ),
                     ),
                     const SizedBox(height: 22),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(15),
+                        color: Colors.white.withAlpha(18),
                         borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.white10),
+                        border: Border.all(color: Colors.white24),
                       ),
                       child: const Text(
-                        'صيانة منزلك بفخامة وأمان • ضمان 100%',
-                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+                        'فخامة الصيانة المنزلية • ضمان ذهبي 100%',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    const SizedBox(height: 52),
+                    const SizedBox(height: 48),
                     const SizedBox(
-                      width: 140,
+                      width: 150,
                       child: LinearProgressIndicator(
-                        color: AppColors.syaanhOrange,
-                        backgroundColor: Colors.white10,
+                        color: AppColors.goldAccent,
+                        backgroundColor: Colors.white12,
                         minHeight: 4,
                       ),
                     ),

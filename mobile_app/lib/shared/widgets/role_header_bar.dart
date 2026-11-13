@@ -74,7 +74,6 @@ class RoleHeaderBar extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // شريط علوي كحلي ملكي مختصر وفاخر على طراز صيانة قطر
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -99,8 +98,8 @@ class RoleHeaderBar extends StatelessWidget {
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('خدمات', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0)),
-                        Text('KHADAMAT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.goldAccent, letterSpacing: 2.5)),
+                        Text('خدمات', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0)),
+                        Text('KHADAMAT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.goldAccent, letterSpacing: 2.8)),
                       ],
                     ),
                   ],
@@ -123,7 +122,7 @@ class RoleHeaderBar extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.circle, size: 9, color: state.isCloudConnected ? AppColors.success : AppColors.syaanhOrange),
+                          Icon(Icons.circle, size: 9, color: state.isCloudConnected ? AppColors.success : AppColors.goldAccent),
                           const SizedBox(width: 5),
                           Text(state.isCloudConnected ? 'متصل' : 'السحابة', style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
                         ],
@@ -164,7 +163,6 @@ class RoleHeaderBar extends StatelessWidget {
             ],
           ),
         ),
-        // شريط البوابات الأربع المختصر والواضح (كلمة واحدة لكل بوابة)
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

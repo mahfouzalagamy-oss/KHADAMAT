@@ -33,7 +33,7 @@ class _TechnicianRegistrationScreenState extends State<TechnicianRegistrationScr
       nationalId: _nationalIdCtrl.text.trim(),
       idFrontPhoto: _idFrontFile,
       idBackPhoto: _idBackFile,
-      certificatePhoto: 'شهادة_خبرة.jpg',
+      certificatePhoto: 'شهادة_خبرة_وفيش.jpg',
       experienceYears: 5,
       walletNumber: _phoneCtrl.text.trim(),
     );
@@ -56,22 +56,23 @@ class _TechnicianRegistrationScreenState extends State<TechnicianRegistrationScr
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                       child: Padding(
                         padding: const EdgeInsets.all(22),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Text('تسجيل فني جديد وتوثيق الهوية', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                            const Text('تسجيل فني جديد وتوثيق الهوية (KYC)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                             const SizedBox(height: 14),
                             TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'اسم الفني الكامل', prefixIcon: Icon(Icons.person))),
                             const SizedBox(height: 10),
                             TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'رقم الجوال', prefixIcon: Icon(Icons.phone_android))),
                             const SizedBox(height: 10),
-                            TextField(controller: _nationalIdCtrl, decoration: const InputDecoration(labelText: 'رقم البطاقة / الهوية الوطنية', prefixIcon: Icon(Icons.badge))),
+                            TextField(controller: _nationalIdCtrl, decoration: const InputDecoration(labelText: 'رقم البطاقة / الإقامة القطرية QID', prefixIcon: Icon(Icons.badge))),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 8,
+                              runSpacing: 8,
                               children: state.services.map((s) {
                                 final sel = _selectedSpecialty == s.name;
                                 return ChoiceChip(
@@ -86,7 +87,7 @@ class _TechnicianRegistrationScreenState extends State<TechnicianRegistrationScr
                               tileColor: const Color(0xFFF0FDF4),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               leading: const Icon(Icons.check_circle, color: AppColors.success),
-                              title: Text('صورة الهوية (أمامي + خلفي): $_idFrontFile / $_idBackFile', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                              title: Text('مرفقات الهوية: $_idFrontFile / $_idBackFile', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                               trailing: OutlinedButton(
                                 onPressed: () => setState(() {
                                   _idFrontFile = 'هوية_محدثة_${DateTime.now().second}.jpg';

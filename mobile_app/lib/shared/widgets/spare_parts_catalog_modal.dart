@@ -26,16 +26,16 @@ class _SparePartsCatalogModalState extends State<SparePartsCatalogModal> {
   @override
   Widget build(BuildContext context) {
     final state = AppStateService.instance;
-    final cats = ['الكل', 'تكييف وتبريد', 'سباكة', 'كهرباء', 'أجهزة منزلية'];
+    final cats = ['الكل', 'تكييف وتبريد', 'سباكة وتسريبات', 'كهرباء وإنارة', 'أجهزة منزلية', 'نجارة وأقفال'];
     final parts = state.sparePartsCatalog.where((p) => _selectedCat == 'الكل' || p.category == _selectedCat).toList();
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       title: const Row(
         children: [
           Icon(Icons.verified_outlined, color: AppColors.syaanhOrange),
           SizedBox(width: 8),
-          Expanded(child: Text('أسعار قطع الغيار الرسمية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
+          Expanded(child: Text('كتالوج أسعار القطع الرسمي', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
         ],
       ),
       content: SizedBox(
@@ -67,7 +67,7 @@ class _SparePartsCatalogModalState extends State<SparePartsCatalogModal> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('${p.officialPrice} ج.م', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.customerPrimary)),
+                          Text('${p.officialPrice}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.customerPrimary, fontSize: 14)),
                           if (widget.orderIdForQuote != null) ...[
                             const SizedBox(width: 8),
                             ElevatedButton(

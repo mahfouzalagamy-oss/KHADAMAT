@@ -57,8 +57,8 @@ class _PaymentSandboxModalState extends State<PaymentSandboxModal> {
     final int cashback = (widget.amount * 0.10).round();
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text('${widget.title} (${widget.amount} ج.م)', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      title: Text('${widget.title} (${widget.amount})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
       content: SizedBox(
         width: 420,
         child: Column(
@@ -70,12 +70,12 @@ class _PaymentSandboxModalState extends State<PaymentSandboxModal> {
               alignment: WrapAlignment.center,
               children: [
                 ChoiceChip(
-                  label: const Text('فودافون كاش'),
+                  label: const Text('فودافون كاش / Paymob'),
                   selected: isVodafone,
                   onSelected: (_) => setState(() => _gateway = 'vodafone'),
                 ),
                 ChoiceChip(
-                  label: const Text('إنستا باي (InstaPay)'),
+                  label: const Text('إنستا باي / Fawry'),
                   selected: !isVodafone,
                   onSelected: (_) => setState(() => _gateway = 'instapay'),
                 ),
@@ -86,7 +86,7 @@ class _PaymentSandboxModalState extends State<PaymentSandboxModal> {
             const SizedBox(height: 10),
             TextField(controller: _walletOtpCtrl, decoration: const InputDecoration(labelText: 'كود التأكيد التجريبي (123456)')),
             const SizedBox(height: 12),
-            Text('🎁 ستحصل فوراً على +$cashback ج.م كاش باك (10%) وضمان 30 يوماً', style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.bold)),
+            Text('🎁 ستحصل فوراً على +$cashback كاش باك (10%) وضمان 30 يوماً', style: const TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

@@ -22,14 +22,14 @@ class AiSmartDiagnosisModal extends StatefulWidget {
 }
 
 class _AiSmartDiagnosisModalState extends State<AiSmartDiagnosisModal> {
-  final _descCtrl = TextEditingController(text: 'التكييف لا يبرد ويصدر صوت طنين');
+  final _descCtrl = TextEditingController(text: 'ضعف تبريد التكييف مع صوت طنين');
   String _selectedSound = 'طنين كباس التكييف';
   bool _isAnalyzing = false;
   AiDiagnosisResultModel? _result;
 
   final List<String> _sounds = const [
     'طنين كباس التكييف',
-    'تقطيع موتور المياه',
+    'تقطيع مضخة المياه',
     'شرز لوحة الكهرباء',
     'اهتزاز الغسالة',
   ];
@@ -52,7 +52,7 @@ class _AiSmartDiagnosisModalState extends State<AiSmartDiagnosisModal> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       title: const Row(
         children: [
           Icon(Icons.auto_awesome, color: AppColors.syaanhOrange),
@@ -106,7 +106,7 @@ class _AiSmartDiagnosisModalState extends State<AiSmartDiagnosisModal> {
                       const SizedBox(height: 4),
                       Text(_result!.technicalCause, style: const TextStyle(fontSize: 12)),
                       const Divider(),
-                      ..._result!.suggestedParts.map((p) => Text('• ${p.name}: ${p.officialPrice} ج.م', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+                      ..._result!.suggestedParts.map((p) => Text('• ${p.name}: ${p.officialPrice}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.customerPrimary),

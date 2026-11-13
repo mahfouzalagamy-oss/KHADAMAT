@@ -72,7 +72,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
   Widget _buildStatusCard(BuildContext context, AppStateService state, OrderItemModel order) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -87,7 +87,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                 Text('${order.serviceName} (#${order.id})', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
                 Chip(
                   label: Text(
-                    order.isPaid ? 'مدفوع ✅ (+${order.cashbackAmount} ج.م كاش باك)' : 'المطلوب: ${order.price} ج.م',
+                    order.isPaid ? 'مدفوع ✅ (+${order.cashbackAmount} كاش باك)' : 'المطلوب: ${order.price}',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                   backgroundColor: order.isPaid ? AppColors.success : AppColors.syaanhOrange,
@@ -172,7 +172,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
   Widget _buildQuoteAndPhotosCard(BuildContext context, AppStateService state, OrderItemModel order) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -199,7 +199,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
                     icon: const Icon(Icons.check, size: 15),
-                    label: const Text('اعتماد المقايسة (-50 ج.م)'),
+                    label: const Text('اعتماد المقايسة (-50)'),
                     onPressed: () => state.approveElectronicQuoteWithInspectionDeduction(order.id),
                   ),
                 OutlinedButton.icon(
@@ -217,7 +217,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
   Widget _buildChatCard(AppStateService state, OrderItemModel order) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

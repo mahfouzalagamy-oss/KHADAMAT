@@ -16,12 +16,12 @@ class CreateOrderScreen extends StatefulWidget {
 class _CreateOrderScreenState extends State<CreateOrderScreen> {
   late String _selectedService;
   final _descCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController(text: 'المنطقة 45 - شارع 18 - مبنى 12');
-  final _priceCtrl = TextEditingController(text: '250');
+  final _addressCtrl = TextEditingController(text: 'منطقة اللؤلؤة / مدينة نصر - فيلا 18');
+  final _priceCtrl = TextEditingController(text: '150');
 
   String _appointmentSlot = 'طوارئ فورية (45 دقيقة)';
   String? _selectedTechId;
-  String _paymentMethod = 'فودافون كاش';
+  String _paymentMethod = 'فودافون كاش / Paymob';
 
   final List<String> _slots = const [
     'طوارئ فورية (45 دقيقة)',
@@ -47,11 +47,11 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
       description: _descCtrl.text,
       photos: const ['قبل_صورة_العطل.jpg', 'وسم_الأمان_العائلي'],
       address: _addressCtrl.text,
-      mapCoords: 'GPS نشط',
+      mapCoords: 'GPS متصل',
       appointmentSlot: _appointmentSlot,
       assignmentMode: 'عروض أسعار',
       paymentMethod: _paymentMethod,
-      price: int.tryParse(_priceCtrl.text.trim()) ?? 250,
+      price: int.tryParse(_priceCtrl.text.trim()) ?? 150,
       manualTechId: _selectedTechId,
       isPaidInitially: isPaid,
       paymentRef: ref,
@@ -84,7 +84,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('طلب صيانة سريع', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                                const Text('حجز خدمة صيانة سريع', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                                 TextButton.icon(
                                   icon: const Icon(Icons.arrow_back, size: 16),
                                   label: const Text('رجوع'),
@@ -118,10 +118,10 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                             const SizedBox(height: 12),
                             TextField(
                               controller: _addressCtrl,
-                              decoration: const InputDecoration(labelText: 'العنوان (المنطقة / الشارع / المبنى)', prefixIcon: Icon(Icons.location_on_outlined)),
+                              decoration: const InputDecoration(labelText: 'العنوان (المنطقة / الشارع / الفيلا)', prefixIcon: Icon(Icons.location_on_outlined)),
                             ),
                             const SizedBox(height: 14),
-                            const Text('اختر الموعد:', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text('الموعد:', style: TextStyle(fontWeight: FontWeight.bold)),
                             const SizedBox(height: 6),
                             Wrap(
                               spacing: 8,
@@ -140,7 +140,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                             const SizedBox(height: 6),
                             ...state.technicians.where((t) => t.isVerified).map((t) {
                               final chosen = _selectedTechId == t.id;
-                              final int p = (int.tryParse(_priceCtrl.text) ?? 250) + (t.id == 'TECH-1' ? 0 : 30);
+                              final int p = (int.tryParse(_priceCtrl.text) ?? 150) + (t.id == 'TECH-1' ? 0 : 25);
                               return Card(
                                 color: chosen ? const Color(0xFFFFF7ED) : Colors.white,
                                 shape: RoundedRectangleBorder(
@@ -156,14 +156,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                   leading: const Icon(Icons.verified_user, color: AppColors.customerPrimary),
                                   title: Text(t.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                                   subtitle: Text('${t.rating}★ • يبعد ${t.distanceKm} كم'),
-                                  trailing: Text('$p ج.م', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.syaanhOrange, fontSize: 15)),
+                                  trailing: Text('$p', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.syaanhOrange, fontSize: 15)),
                                 ),
                               );
                             }),
                             const SizedBox(height: 14),
                             Wrap(
                               spacing: 8,
-                              children: ['فودافون كاش', 'إنستا باي', 'كاش عند الإتمام'].map((m) {
+                              children: ['فودافون كاش / Paymob', 'إنستا باي / Fawry', 'كاش عند الإتمام'].map((m) {
                                 final sel = _paymentMethod == m;
                                 return ChoiceChip(
                                   label: Text(m),
@@ -177,7 +177,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               icon: const Icon(Icons.check_circle),
                               label: const Text('تأكيد الحجز الآن'),
                               onPressed: () {
-                                final int price = int.tryParse(_priceCtrl.text.trim()) ?? 250;
+                                final int price = int.tryParse(_priceCtrl.text.trim()) ?? 150;
                                 if (_paymentMethod == 'كاش عند الإتمام') {
                                   _submitOrder(isPaid: false);
                                 } else {

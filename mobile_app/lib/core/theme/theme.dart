@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color customerPrimary = Color(0xFF040D1A); // كحلي داكن ملكي (Onyx)
-  static const Color primaryNavy = Color(0xFF0A1C30); // أزرق داكن فخم
-  static const Color syaanhOrange = Color(0xFFE67E22); // برتقالي صيانة دافئ
-  static const Color goldAccent = Color(0xFFD4AF37); // ذهبي فاخر
-  static const Color goldGlow = Color(0xFFF59E0B);
-  
-  static const Color technicianPrimary = Color(0xFF0D324D);
-  static const Color companyPrimary = Color(0xFF0F4C5C);
-  static const Color adminPrimary = Color(0xFF581C1C);
+  static const Color customerPrimary = Color(0xFF07162C);
+  static const Color primaryNavy = Color(0xFF0D2342);
+  static const Color syaanhOrange = Color(0xFFFF6B00);
+  static const Color goldAccent = Color(0xFFEAB308);
 
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color technicianPrimary = Color(0xFF0F3D68);
+  static const Color companyPrimary = Color(0xFF0D5C63);
+  static const Color adminPrimary = Color(0xFF6B1D1D);
+
+  static const Color background = Color(0xFFF3F6FA);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF040D1A);
+  static const Color textPrimary = Color(0xFF07162C);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color border = Color(0xFFE2E8F0);
   static const Color success = Color(0xFF10B981);
@@ -33,6 +32,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Cairo',
+      fontFamilyFallback: const ['Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
@@ -52,27 +52,27 @@ class AppTheme {
           backgroundColor: AppColors.syaanhOrange,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 13, fontWeight: FontWeight.w900),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: BorderSide(color: primary.withAlpha(50), width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          side: BorderSide(color: primary.withAlpha(70), width: 1.4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 12, fontWeight: FontWeight.bold),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.syaanhOrange, width: 2)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.syaanhOrange, width: 2)),
       ),
     );
   }

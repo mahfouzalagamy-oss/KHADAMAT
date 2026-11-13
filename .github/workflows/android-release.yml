@@ -36,13 +36,11 @@ jobs:
           channel: 'stable'
           cache: false
 
-      - name: Analyze & Build KHADAMAT Web + Android APK
+      - name: Analyze & Build KHADAMAT Luxury Web + Android APK & AAB
         run: |
-          flutter create --org com.khadamat.official --project-name khamat_app --platforms android,web build_app
+          flutter create --org com.khadamat.official --project-name khadamat_app --platforms android,web build_app
           rm -rf build_app/lib/*
           cp -r mobile_app/lib/* build_app/lib/
-          mkdir -p build_app/assets/images
-          cp mobile_app/assets/images/image_3.png build_app/assets/images/ 2>/dev/null || true
           rm -rf build_app/test
           cd build_app
           flutter pub add http
@@ -63,7 +61,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build_app/build/web
           force_orphan: true
-          commit_message: "Auto-deploy KHADAMAT (خدمات) Web to GitHub Pages"
+          commit_message: "Auto-deploy KHADAMAT (خدمات) Luxury Web to GitHub Pages"
 
       - name: Upload KHADAMAT Website Artifact
         uses: actions/upload-artifact@v4

@@ -9,7 +9,7 @@ class ServiceItemModel {
   final int inspectionFee;
   final IconData icon;
   final Color color;
-  final String bgImageUrl; // رابط الصورة التعبيرية لكل قسم
+  final String bgImageUrl;
 
   ServiceItemModel({
     required this.id,
@@ -23,7 +23,7 @@ class ServiceItemModel {
     required this.bgImageUrl,
   });
 
-  String get priceRange => '$minPrice ج.م';
+  String get priceRange => '$minPrice ر.ق / ج.م';
 }
 
 class SparePartItemModel {
@@ -61,8 +61,8 @@ class HomeApplianceModel {
     required this.locationRoom,
     required this.lastMaintenanceDate,
     required this.nextReminderDate,
-    this.healthScore = 95,
-    this.warrantyStatus = 'ضمان ساري',
+    this.healthScore = 96,
+    this.warrantyStatus = 'ضمان ذهبي ساري',
   });
 }
 
@@ -143,12 +143,12 @@ class TechnicianItemModel {
     required this.phone,
     required this.distanceKm,
     this.nationalId = '29405120102938',
-    this.idFrontPhoto = 'هوية_أمامي.jpg',
-    this.idBackPhoto = 'هوية_خلفي.jpg',
-    this.certificatePhoto = 'شهادة_الخبرة.jpg',
+    this.idFrontPhoto = 'هوية_وطنية_أمامي.jpg',
+    this.idBackPhoto = 'هوية_وطنية_خلفي.jpg',
+    this.certificatePhoto = 'شهادة_خبرة_وفيش.jpg',
     this.experienceYears = 5,
     this.walletNumber = '01012345678',
-    this.companyAffiliation = 'فني مستقل',
+    this.companyAffiliation = 'أسطول خدمات المعتمد',
     this.rating = 4.9,
     this.completedJobs = 42,
     this.isVerified = true,
@@ -157,9 +157,9 @@ class TechnicianItemModel {
   });
 
   String get approvalStatusArabic {
-    if (approvalStatus == 'approved' && isVerified) return 'موثق ✅';
+    if (approvalStatus == 'approved' && isVerified) return 'موثق الهوية ✅';
     if (approvalStatus == 'rejected') return 'مرفوض ❌';
-    return 'قيد المراجعة ⏳';
+    return 'بانتظار موافقة الإدارة ⏳';
   }
 }
 

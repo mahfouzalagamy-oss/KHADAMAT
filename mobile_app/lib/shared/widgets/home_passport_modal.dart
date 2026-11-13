@@ -24,12 +24,12 @@ class HomePassportModal extends StatefulWidget {
         textDirection: TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: AppColors.customerPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           title: const Text('اتصال صوتي مشفر 🔒', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircleAvatar(radius: 32, backgroundColor: AppColors.syaanhOrange, child: Icon(Icons.phone_in_talk, color: Colors.white, size: 32)),
+              const CircleAvatar(radius: 34, backgroundColor: AppColors.syaanhOrange, child: Icon(Icons.phone_in_talk, color: Colors.white, size: 32)),
               const SizedBox(height: 12),
               Text(order.technicianName, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
               const SizedBox(height: 6),
@@ -55,7 +55,7 @@ class HomePassportModal extends StatefulWidget {
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           title: const Row(
             children: [
               Icon(Icons.shield, color: AppColors.success),
@@ -107,7 +107,7 @@ class _HomePassportModalState extends State<HomePassportModal> {
   Widget build(BuildContext context) {
     final state = AppStateService.instance;
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       title: const Text('جواز السفر الصياني للمنزل', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
       content: SizedBox(
         width: 460,

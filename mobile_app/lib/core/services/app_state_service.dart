@@ -20,6 +20,7 @@ class AppStateService extends ChangeNotifier {
 
   int currentRole = 0;
   bool isAuthenticated = false;
+  bool technicianOnlineToggle = true;
   String currentUserName = 'أحمد محمود';
   String currentUserPhone = '01012345678';
   String selectedCity = 'الدوحة - قطر';
@@ -32,141 +33,162 @@ class AppStateService extends ChangeNotifier {
 
   final List<String> egyptCities = const [
     'الدوحة - قطر',
-    'الريان - قطر',
     'لوسيل - قطر',
+    'الريان - قطر',
     'الوكرة - قطر',
     'القاهرة',
     'الجيزة',
     'الإسكندرية',
+    'المنصورة',
   ];
 
   final List<String> notifications = [
-    'مرحباً بك في تطبيق خدمات | KHADAMAT — صيانة منزلك بفخامة وأمان.',
+    'مرحباً بك في خدمات | KHADAMAT — صيانة منزلك بفخامة وأمان.',
     'كاش باك 10% فوري وضمان 30 يوماً عند السداد الإلكتروني.',
+    'طلب توثيق هوية فني جديد بانتظار موافقة الإدارة.',
   ];
 
-  // ربط الأقسام بصور تعبيرية احترافية بجودة عالية
+  final String heroBannerImageUrl =
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=85&w=1000';
+
   final List<ServiceItemModel> services = [
     ServiceItemModel(
       id: 'ac',
       name: 'تكييف وتبريد',
-      subtitle: 'صيانة فريون وغسيل كيميائي وفحص تسريب',
-      minPrice: 250,
-      maxPrice: 650,
+      subtitle: 'غسيل • فريون • صيانة',
+      minPrice: 150,
+      maxPrice: 550,
       icon: Icons.ac_unit_rounded,
       color: const Color(0xFF0284C7),
-      bgImageUrl: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&q=80&w=400',
+      bgImageUrl: 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&q=80&w=600',
     ),
     ServiceItemModel(
       id: 'plumbing',
-      name: 'سباكة',
-      subtitle: 'كشف تسريبات وصيانة خلاطات ومواتير ضغط',
-      minPrice: 150,
-      maxPrice: 450,
+      name: 'سباكة وتسريبات',
+      subtitle: 'خلاطات • مضخات • فلاتر',
+      minPrice: 120,
+      maxPrice: 400,
       icon: Icons.plumbing_rounded,
-      color: const Color(0xFF081F36),
-      bgImageUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=400',
+      color: const Color(0xFF0F4C81),
+      bgImageUrl: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=600',
     ),
     ServiceItemModel(
       id: 'electric',
-      name: 'كهرباء',
-      subtitle: 'تأسيس وصيانة أعطال وإنارة وكشف التماسات',
-      minPrice: 150,
-      maxPrice: 500,
+      name: 'كهرباء وإنارة',
+      subtitle: 'لوحات • ثريات • أعطال',
+      minPrice: 120,
+      maxPrice: 450,
       icon: Icons.bolt_rounded,
       color: const Color(0xFFFF6B00),
-      bgImageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400',
+      bgImageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600',
     ),
     ServiceItemModel(
       id: 'appliances',
       name: 'أجهزة منزلية',
-      subtitle: 'إصلاح غسالات وثلاجات وأفران وسخانات مياه',
-      minPrice: 250,
-      maxPrice: 700,
+      subtitle: 'غسالات • ثلاجات • أفران',
+      minPrice: 180,
+      maxPrice: 600,
       icon: Icons.kitchen_rounded,
       color: const Color(0xFF4F46E5),
-      bgImageUrl: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&q=80&w=400',
+      bgImageUrl: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&q=80&w=600',
     ),
     ServiceItemModel(
       id: 'carpentry',
       name: 'نجارة وأقفال',
-      subtitle: 'فتح أبواب مصفحة وصيانة غرف وتغيير كوالين',
-      minPrice: 200,
-      maxPrice: 600,
+      subtitle: 'أبواب • أقفال ذكية • مطابخ',
+      minPrice: 150,
+      maxPrice: 500,
       icon: Icons.handyman_rounded,
-      color: const Color(0xFF78350F),
-      bgImageUrl: 'https://images.unsplash.com/photo-1534224039826-c7a0eda0e6b3?auto=format&fit=crop&q=80&w=400',
+      color: const Color(0xFFB45309),
+      bgImageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&q=80&w=600',
     ),
     ServiceItemModel(
       id: 'cleaning',
-      name: 'نظافة شاملة',
-      subtitle: 'تعقيم وتنظيف عميق وخزانات ومكافحة حشرات',
-      minPrice: 350,
-      maxPrice: 1200,
+      name: 'نظافة وتعقيم',
+      subtitle: 'قصور • خزانات • واجهات',
+      minPrice: 250,
+      maxPrice: 950,
       icon: Icons.cleaning_services_rounded,
       color: const Color(0xFF10B981),
-      bgImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400',
+      bgImageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=600',
+    ),
+    ServiceItemModel(
+      id: 'smarthome',
+      name: 'منزل ذكي وكاميرات',
+      subtitle: 'كاميرات • إنتركم • شبكات',
+      minPrice: 200,
+      maxPrice: 800,
+      icon: Icons.videocam_rounded,
+      color: const Color(0xFF0D9488),
+      bgImageUrl: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=600',
+    ),
+    ServiceItemModel(
+      id: 'pest',
+      name: 'مكافحة وعزل',
+      subtitle: 'مكافحة آفات • عزل أسطح',
+      minPrice: 220,
+      maxPrice: 750,
+      icon: Icons.shield_rounded,
+      color: const Color(0xFF7C3AED),
+      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600',
     ),
   ];
 
   final List<SparePartItemModel> sparePartsCatalog = [
-    SparePartItemModel(id: 'SP-1', name: 'شحن غاز فريون أمريكي R410A', category: 'تكييف وتبريد', brand: 'Honeywell USA', officialPrice: 450, warrantyMonths: 6),
-    SparePartItemModel(id: 'SP-2', name: 'كابستور تكييف 45/50 ميكروفاراد', category: 'تكييف وتبريد', brand: 'Samwha Korea', officialPrice: 180, warrantyMonths: 12),
-    SparePartItemModel(id: 'SP-3', name: 'مروحة وحدة خارجية للتكييف', category: 'تكييف وتبريد', brand: 'Carrier OEM', officialPrice: 520, warrantyMonths: 12),
-    SparePartItemModel(id: 'SP-4', name: 'قلب خلاط مياه سيراميك ألماني', category: 'سباكة', brand: 'Grohe', officialPrice: 160, warrantyMonths: 12),
-    SparePartItemModel(id: 'SP-5', name: 'أوتوماتيك موتور مياه (فلوماك)', category: 'سباكة', brand: 'Calpeda Italy', officialPrice: 380, warrantyMonths: 12),
-    SparePartItemModel(id: 'SP-6', name: 'طقم شمعات فلتر مياه 7 مراحل', category: 'سباكة', brand: 'Aqua Pro', officialPrice: 290, warrantyMonths: 6),
-    SparePartItemModel(id: 'SP-7', name: 'قاطع كهرباء أوتوماتيك 32 أمبير', category: 'كهرباء', brand: 'Schneider', officialPrice: 175, warrantyMonths: 24),
-    SparePartItemModel(id: 'SP-8', name: 'مفتاح حماية تسريب أرضي', category: 'كهرباء', brand: 'ABB Original', officialPrice: 620, warrantyMonths: 24),
-    SparePartItemModel(id: 'SP-9', name: 'طلمبة طرد غسالة أوتوماتيك', category: 'أجهزة منزلية', brand: 'LG OEM', officialPrice: 340, warrantyMonths: 12),
-    SparePartItemModel(id: 'SP-10', name: 'هيتر سخان مياه نحاسي + ثرموستات', category: 'أجهزة منزلية', brand: 'Ariston', officialPrice: 280, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-1', name: 'أسطوانة شحن فريون أمريكي R410A', category: 'تكييف وتبريد', brand: 'Honeywell USA', officialPrice: 350, warrantyMonths: 6),
+    SparePartItemModel(id: 'SP-2', name: 'كابستور تكييف 50 ميكروفاراد كوري', category: 'تكييف وتبريد', brand: 'Samwha Korea', officialPrice: 160, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-3', name: 'مروحة وحدة خارجية أصلية', category: 'تكييف وتبريد', brand: 'Carrier OEM', officialPrice: 480, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-4', name: 'قلب خلاط مياه سيراميك ألماني', category: 'سباكة وتسريبات', brand: 'Grohe', officialPrice: 150, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-5', name: 'جهاز أوتوماتيك مضخة مياه (فلوماك)', category: 'سباكة وتسريبات', brand: 'Calpeda Italy', officialPrice: 340, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-6', name: 'قاطع كهرباء أوتوماتيك 32 أمبير', category: 'كهرباء وإنارة', brand: 'Schneider', officialPrice: 170, warrantyMonths: 24),
+    SparePartItemModel(id: 'SP-7', name: 'مفتاح حماية تسريب أرضي (RCCB)', category: 'كهرباء وإنارة', brand: 'ABB Original', officialPrice: 540, warrantyMonths: 24),
+    SparePartItemModel(id: 'SP-8', name: 'طلمبة طرد غسالة أوتوماتيك', category: 'أجهزة منزلية', brand: 'LG OEM', officialPrice: 310, warrantyMonths: 12),
+    SparePartItemModel(id: 'SP-9', name: 'قفل باب ذكي بالبصمة والبطاقة', category: 'نجارة وأقفال', brand: 'Yale Smart', officialPrice: 680, warrantyMonths: 24),
   ];
 
   final List<HomeApplianceModel> homeAppliances = [
     HomeApplianceModel(
       id: 'APP-1',
-      name: 'تكييف سبليت إنفرتر 2 حصان',
-      brand: 'Sharp',
-      locationRoom: 'الصالة الرئيسية',
+      name: 'تكييف مركزي / سبليت إنفرتر',
+      brand: 'Carrier',
+      locationRoom: 'الجناح الرئيسي',
       lastMaintenanceDate: '2026-10-15',
       nextReminderDate: '2027-04-15',
-      healthScore: 96,
-      warrantyStatus: 'ضمان ذهبي ساري',
+      healthScore: 97,
     ),
     HomeApplianceModel(
       id: 'APP-2',
-      name: 'موتور ضغط مياه أوتوماتيك',
+      name: 'مضخة ضغط مياه أوتوماتيك',
       brand: 'Calpeda',
-      locationRoom: 'السطح / المنور',
-      lastMaintenanceDate: '2026-08-20',
-      nextReminderDate: '2027-02-20',
-      healthScore: 90,
-      warrantyStatus: 'فحص دوري قادم',
+      locationRoom: 'غرفة الخدمات',
+      lastMaintenanceDate: '2026-09-01',
+      nextReminderDate: '2027-03-01',
+      healthScore: 92,
     ),
   ];
 
   final List<CompanyItemModel> companies = [
     CompanyItemModel(
       id: 'COMP-1',
-      name: 'مؤسسة الدوحة والخليج للصيانة والتكييف',
-      specialty: 'تكييف • كهرباء • عقود سنوية',
+      name: 'مؤسسة الدوحة الملكية للصيانة والتكييف',
+      specialty: 'تكييف مركزي • كهرباء • عقود سنوية AMC',
       city: 'الدوحة - قطر',
       commercialReg: 'CR-441902',
       taxCard: 'TX-901-334',
-      techniciansCount: 25,
-      activeAmcContracts: 52,
+      techniciansCount: 28,
+      activeAmcContracts: 64,
       rating: 4.9,
       isVerified: true,
     ),
     CompanyItemModel(
       id: 'COMP-2',
       name: 'شركة الرواد الهندسية للخدمات المتكاملة',
-      specialty: 'تكييف • سباكة • أجهزة منزلية',
+      specialty: 'صيانة فيلات • منزل ذكي • سباكة',
       city: 'القاهرة',
       commercialReg: 'CR-884120',
       taxCard: 'TX-552-910',
-      techniciansCount: 18,
-      activeAmcContracts: 34,
+      techniciansCount: 20,
+      activeAmcContracts: 41,
       rating: 4.9,
       isVerified: true,
     ),
@@ -179,37 +201,56 @@ class AppStateService extends ChangeNotifier {
       specialty: 'تكييف وتبريد',
       city: 'الدوحة - قطر',
       phone: '01066554433',
-      distanceKm: 1.2,
+      distanceKm: 1.1,
       nationalId: '29104150104421',
-      idFrontPhoto: 'بطاقة_مصطفى_أمامي.jpg',
-      idBackPhoto: 'بطاقة_مصطفى_خلفي.jpg',
-      certificatePhoto: 'شهادة_مزاولة_تكييف.jpg',
-      experienceYears: 8,
+      idFrontPhoto: 'بطاقة_هوية_مصطفى_أمامي.jpg',
+      idBackPhoto: 'بطاقة_هوية_مصطفى_خلفي.jpg',
+      certificatePhoto: 'شهادة_اعتماد_تكييف_مركزي.jpg',
+      experienceYears: 9,
       walletNumber: '01066554433',
-      companyAffiliation: 'مؤسسة الدوحة والخليج',
+      companyAffiliation: 'مؤسسة الدوحة الملكية',
       rating: 4.9,
-      completedJobs: 128,
+      completedJobs: 145,
       isVerified: true,
       approvalStatus: 'approved',
     ),
     TechnicianItemModel(
       id: 'TECH-2',
       name: 'م. حسن عبد السلام',
-      specialty: 'سباكة',
-      city: 'القاهرة',
+      specialty: 'سباكة وتسريبات',
+      city: 'لوسيل - قطر',
       phone: '01022334455',
-      distanceKm: 2.1,
+      distanceKm: 1.9,
       nationalId: '29308220105519',
-      idFrontPhoto: 'بطاقة_حسن_أمامي.jpg',
-      idBackPhoto: 'بطاقة_حسن_خلفي.jpg',
+      idFrontPhoto: 'بطاقة_هوية_حسن_أمامي.jpg',
+      idBackPhoto: 'بطاقة_هوية_حسن_خلفي.jpg',
       certificatePhoto: 'فيش_جنائي_معتمد.jpg',
-      experienceYears: 6,
+      experienceYears: 7,
       walletNumber: '01022334455',
-      companyAffiliation: 'فني مستقل',
+      companyAffiliation: 'أسطول خدمات المعتمد',
       rating: 4.8,
-      completedJobs: 94,
+      completedJobs: 98,
       isVerified: true,
       approvalStatus: 'approved',
+    ),
+    TechnicianItemModel(
+      id: 'TECH-3',
+      name: 'م. كريم طارق (طلب توثيق جديد)',
+      specialty: 'كهرباء وإنارة',
+      city: 'الدوحة - قطر',
+      phone: '01099881122',
+      distanceKm: 1.4,
+      nationalId: '29611050108834',
+      idFrontPhoto: 'هوية_كريم_طارق_أمامي.jpg',
+      idBackPhoto: 'هوية_كريم_طارق_خلفي.jpg',
+      certificatePhoto: 'شهادة_خبرة_كهرباء_ذكية.jpg',
+      experienceYears: 5,
+      walletNumber: '01099881122',
+      companyAffiliation: 'فني مستقل',
+      rating: 4.9,
+      completedJobs: 0,
+      isVerified: false,
+      approvalStatus: 'pending',
     ),
   ];
 
@@ -217,31 +258,31 @@ class AppStateService extends ChangeNotifier {
     OrderItemModel(
       id: 'KH-9041',
       serviceName: 'تكييف وتبريد',
-      description: 'ضعف تبريد وصوت في الوحدة الخارجية',
+      description: 'صيانة دورية وفحص تبريد الجناح الرئيسي',
       attachedPhotos: [
-        'قبل_الوحدة_الداخلية.jpg',
-        'بعد_تنظيف_وشحن_الفريون.jpg',
-        'قطعة_كابستور تكييف 45/50 ميكروفاراد (180 ج.م)',
+        'قبل_فحص_الوحدة.jpg',
+        'بعد_غسيل_وضبط_الفريون.jpg',
+        'قطعة_كابستور تكييف 50 ميكروفاراد كوري (160)',
         'وسم_الأمان_العائلي',
       ],
       city: 'الدوحة - قطر',
-      address: 'منطقة اللؤلؤة / مدينة نصر - مبنى 18',
-      mapCoordinates: 'GPS نشط',
-      appointmentSlot: 'اليوم (04:00 م - 07:00 م)',
+      address: 'منطقة اللؤلؤة - فيلا 18',
+      mapCoordinates: 'GPS متصل',
+      appointmentSlot: 'اليوم (04:00 م - 06:00 م)',
       assignmentMode: 'عروض أسعار',
       customerName: 'أحمد محمود',
       customerPhone: '01012345678',
       pinCode: '4829',
-      paymentMethod: 'فودافون كاش',
+      paymentMethod: 'فودافون كاش / إنستا باي',
       statusIndex: 1,
-      price: 430,
+      price: 360,
       technicianId: 'TECH-1',
       technicianName: 'م. مصطفى السيد',
       technicianPhone: '01066554433',
       isPaid: false,
       chatMessages: [
-        'تم تعيين م. مصطفى السيد (موثق الهوية) وتفعيل الأمان العائلي.',
-        'المقايسة المعتمدة: مصنعية + كابستور رسمي - خصم المعاينة = 430 ج.م.',
+        'تم تعيين م. مصطفى السيد (موثق الهوية ✅) وتفعيل رابط الأمان العائلي.',
+        'المقايسة المعتمدة: مصنعية + كابستور رسمي - خصم المعاينة = 360.',
       ],
     ),
   ];
@@ -299,10 +340,10 @@ class AppStateService extends ChangeNotifier {
           activeOrderId ??= orders.first.id;
         }
         isCloudConnected = true;
-        lastSyncStatus = 'متصل حياً (${orders.length} طلبات)';
+        lastSyncStatus = 'متصل حياً (${orders.length})';
       } else {
         isCloudConnected = false;
-        lastSyncStatus = 'تنبيه السحابة: ${res.statusCode}';
+        lastSyncStatus = 'كود السحابة: ${res.statusCode}';
       }
 
       final notifUri = Uri.parse('$_cleanBaseUrl/rest/v1/notifications?select=*&order=id.desc&limit=10');
@@ -358,40 +399,40 @@ class AppStateService extends ChangeNotifier {
     if (text.contains('تكييف') || text.contains('فريون') || text.contains('تبريد') || text.contains('طنين')) {
       final parts = sparePartsCatalog.where((p) => p.id == 'SP-1' || p.id == 'SP-2').toList();
       return AiDiagnosisResultModel(
-        title: 'ضعف تبريد أو كابستور الوحدة الخارجية',
-        technicalCause: 'يرجح تلف كابستور الإقلاع أو نقص غاز الفريون R410A.',
+        title: 'ضعف كفاءة التبريد أو كابستور الإقلاع',
+        technicalCause: 'يرجح تلف كابستور الوحدة الخارجية أو نقص الفريون R410A.',
         recommendedService: 'تكييف وتبريد',
         suggestedParts: parts,
-        estimatedLabor: 250,
+        estimatedLabor: 180,
       );
     } else if (text.contains('مياه') || text.contains('موتور') || text.contains('تسريب') || text.contains('سباكة')) {
       final parts = sparePartsCatalog.where((p) => p.id == 'SP-4' || p.id == 'SP-5').toList();
       return AiDiagnosisResultModel(
-        title: 'خلل في أوتوماتيك الموتور (الفلوماك) أو الخلاط',
-        technicalCause: 'تقطيع الموتور يدل على تلف الفلوماك أو قلب الخلاط السيراميك.',
-        recommendedService: 'سباكة',
+        title: 'خلل أوتوماتيك المضخة (الفلوماك) أو الخلاط',
+        technicalCause: 'تقطيع المضخة يدل على تلف الفلوماك أو قلب الخلاط السيراميك.',
+        recommendedService: 'سباكة وتسريبات',
         suggestedParts: parts,
-        estimatedLabor: 200,
+        estimatedLabor: 150,
         isUrgentSos: true,
       );
     } else if (text.contains('كهرباء') || text.contains('قفلة') || text.contains('شرز') || text.contains('قاطع')) {
-      final parts = sparePartsCatalog.where((p) => p.id == 'SP-7' || p.id == 'SP-8').toList();
+      final parts = sparePartsCatalog.where((p) => p.id == 'SP-6' || p.id == 'SP-7').toList();
       return AiDiagnosisResultModel(
         title: 'حمل زائد في القاطع الكهربائي',
         technicalCause: 'يلزم استبدال القاطع الفرعي 32 أمبير بقطعة أصلية.',
-        recommendedService: 'كهرباء',
+        recommendedService: 'كهرباء وإنارة',
         suggestedParts: parts,
-        estimatedLabor: 200,
+        estimatedLabor: 150,
         isUrgentSos: true,
       );
     } else {
-      final parts = sparePartsCatalog.where((p) => p.id == 'SP-9' || p.id == 'SP-10').toList();
+      final parts = sparePartsCatalog.where((p) => p.id == 'SP-8' || p.id == 'SP-9').toList();
       return AiDiagnosisResultModel(
-        title: 'عطل طلمبة الطرد أو التسخين',
+        title: 'فحص وصيانة الأجهزة والأقفال الذكية',
         technicalCause: 'يوصى باستبدال القطعة الأصلية من الكتالوج مع ضمان سنة.',
         recommendedService: 'أجهزة منزلية',
         suggestedParts: parts,
-        estimatedLabor: 250,
+        estimatedLabor: 200,
       );
     }
   }
@@ -409,8 +450,8 @@ class AppStateService extends ChangeNotifier {
       mapCoords: 'رادار GPS للطوارئ نشط',
       appointmentSlot: 'طوارئ SOS (خلال 45 دقيقة)',
       assignmentMode: 'رادار الطوارئ SOS',
-      paymentMethod: 'فودافون كاش',
-      price: 350,
+      paymentMethod: 'فودافون كاش / إنستا باي',
+      price: 300,
     );
     _pushNotificationToSupabase('🚨 نداء طوارئ SOS #${order.id} ($serviceName)');
     return order;
@@ -420,11 +461,11 @@ class AppStateService extends ChangeNotifier {
     final idx = orders.indexWhere((o) => o.id == orderId);
     if (idx == -1) return;
     final order = orders[idx];
-    final tag = 'قطعة_${part.name} (${part.officialPrice} ج.م)';
+    final tag = 'قطعة_${part.name} (${part.officialPrice})';
     if (!order.attachedPhotos.contains(tag)) {
       order.attachedPhotos.add(tag);
       order.price += part.officialPrice;
-      order.chatMessages.add('إضافة قطعة رسمية: [${part.name}] (${part.officialPrice} ج.م).');
+      order.chatMessages.add('إضافة قطعة رسمية للمقايسة: [${part.name}] (${part.officialPrice}).');
       notifyListeners();
       _pushOrderToSupabase(order, isUpdate: true);
     }
@@ -437,7 +478,7 @@ class AppStateService extends ChangeNotifier {
     if (!order.attachedPhotos.contains('وسم_مقايسة_معتمدة')) {
       order.attachedPhotos.add('وسم_مقايسة_معتمدة');
       order.price = (order.price - 50).clamp(100, 99999);
-      order.chatMessages.add('اعتماد المقايسة ✅ وخصم المعاينة (-50 ج.م). الإجمالي: ${order.price} ج.م.');
+      order.chatMessages.add('اعتماد المقايسة ✅ وخصم المعاينة (-50). الصافي: ${order.price}.');
       notifyListeners();
       _pushOrderToSupabase(order, isUpdate: true);
     }
@@ -460,9 +501,23 @@ class AppStateService extends ChangeNotifier {
   void updateSparePartPrice(String partId, int newPrice) {
     final idx = sparePartsCatalog.indexWhere((p) => p.id == partId);
     if (idx != -1) {
-      sparePartsCatalog[idx].officialPrice = newPrice;
+      sparePartsCatalog[idx].officialPrice = newPrice.clamp(20, 99999);
       notifyListeners();
     }
+  }
+
+  void updateServiceBasePrice(String serviceId, int delta) {
+    final idx = services.indexWhere((s) => s.id == serviceId);
+    if (idx != -1) {
+      services[idx].minPrice = (services[idx].minPrice + delta).clamp(50, 9999);
+      services[idx].maxPrice = (services[idx].maxPrice + delta).clamp(100, 99999);
+      notifyListeners();
+    }
+  }
+
+  void toggleTechnicianOnlineStatus() {
+    technicianOnlineToggle = !technicianOnlineToggle;
+    notifyListeners();
   }
 
   void addHomeApplianceToPassport({required String name, required String brand, required String room}) {
@@ -499,9 +554,20 @@ class AppStateService extends ChangeNotifier {
         commercialReg: commercialReg,
         taxCard: taxCard,
         techniciansCount: fleetCount,
+        activeAmcContracts: 1,
       ),
     );
     notifyListeners();
+    _pushNotificationToSupabase('اعتماد شركة جديدة في بوابة الأعمال: $name ($commercialReg)');
+  }
+
+  void incrementCompanyAmcContract(String compId) {
+    final idx = companies.indexWhere((c) => c.id == compId);
+    if (idx != -1) {
+      companies[idx].activeAmcContracts += 1;
+      notifyListeners();
+      _pushNotificationToSupabase('إصدار عقد صيانة سنوي AMC جديد عبر ${companies[idx].name}');
+    }
   }
 
   TechnicianItemModel registerNewTechnicianApplication({
@@ -524,7 +590,7 @@ class AppStateService extends ChangeNotifier {
       specialty: specialty,
       city: city,
       phone: phone,
-      distanceKm: 1.4,
+      distanceKm: 1.3,
       nationalId: nationalId,
       idFrontPhoto: idFrontPhoto,
       idBackPhoto: idBackPhoto,
@@ -562,7 +628,7 @@ class AppStateService extends ChangeNotifier {
     final prefix = isAfterPhoto ? 'بعد_الإصلاح' : 'قبل_الصيانة';
     final fileName = '${prefix}_${DateTime.now().second}.jpg';
     order.attachedPhotos.add(fileName);
-    order.chatMessages.add('تم إرفاق صورة ($fileName).');
+    order.chatMessages.add('تم توثيق الصورة ($fileName).');
     notifyListeners();
     _pushOrderToSupabase(order, isUpdate: true);
   }
@@ -577,11 +643,11 @@ class AppStateService extends ChangeNotifier {
     totalCashbackEarned += cashback;
 
     order.chatMessages.add(
-      'تم السداد (${order.price} ج.م) عبر $methodLabel ($referenceCode) + كاش باك $cashback ج.م 🎁',
+      'تم السداد (${order.price}) عبر $methodLabel ($referenceCode) + كاش باك $cashback 🎁',
     );
     notifyListeners();
     _pushOrderToSupabase(order, isUpdate: true);
-    _pushNotificationToSupabase('سداد الطلب #${order.id} وإضافة $cashback ج.م كاش باك.');
+    _pushNotificationToSupabase('سداد الطلب #${order.id} وإضافة $cashback كاش باك.');
   }
 
   void rechargeWalletViaSandbox(int amount, String methodLabel, String referenceCode) {
@@ -589,7 +655,7 @@ class AppStateService extends ChangeNotifier {
     customerWallet += (amount + bonus);
     totalCashbackEarned += bonus;
     notifyListeners();
-    _pushNotificationToSupabase('شحن المحفظة بـ $amount ج.م + هدية $bonus ج.م عبر $methodLabel.');
+    _pushNotificationToSupabase('شحن المحفظة بـ $amount + هدية $bonus عبر $methodLabel.');
   }
 
   void setRole(int role) {
@@ -653,13 +719,13 @@ class AppStateService extends ChangeNotifier {
     }
 
     final initialChats = <String>[
-      'تم تعيين الفني المعتمد (${chosenTech.name}) - المعاينة 50 ج.م تُخصم عند الإصلاح.',
+      'تم تعيين الفني المعتمد (${chosenTech.name}) - المعاينة 50 تُخصم عند الإصلاح.',
     ];
     if (isPaidInitially && paymentRef != null) {
       final int cashback = (price * 0.10).round();
       customerWallet += cashback;
       totalCashbackEarned += cashback;
-      initialChats.add('سداد مسبق ($price ج.م) + كاش باك $cashback ج.م.');
+      initialChats.add('سداد مسبق ($price) + كاش باك $cashback.');
     }
 
     final normalizedPhotos = photos.isEmpty
@@ -717,19 +783,10 @@ class AppStateService extends ChangeNotifier {
       technicianEarnings += (order.price * 0.85);
       order.chatMessages.add('اكتمل الطلب وصدر الضمان الذهبي (${order.warrantyNumber}).');
     } else {
-      order.chatMessages.add('تحديث الحالة: ${order.statusText}');
+      order.chatMessages.add('تحديث المرحلة: ${order.statusText}');
     }
     notifyListeners();
     _pushOrderToSupabase(order, isUpdate: true);
-  }
-
-  void rejectOrderByTechnician(String orderId) {
-    final idx = orders.indexWhere((o) => o.id == orderId);
-    if (idx == -1) return;
-    orders[idx].technicianName = 'جاري التوجيه لفني بديل...';
-    orders[idx].statusIndex = 0;
-    notifyListeners();
-    _pushOrderToSupabase(orders[idx], isUpdate: true);
   }
 
   void sendChatMessage(String orderId, String sender, String text) {
@@ -737,15 +794,6 @@ class AppStateService extends ChangeNotifier {
     final idx = orders.indexWhere((o) => o.id == orderId);
     if (idx == -1) return;
     orders[idx].chatMessages.add('$sender: ${text.trim()}');
-    notifyListeners();
-    _pushOrderToSupabase(orders[idx], isUpdate: true);
-  }
-
-  void submitReview(String orderId, int stars, String comment) {
-    final idx = orders.indexWhere((o) => o.id == orderId);
-    if (idx == -1) return;
-    orders[idx].customerRating = stars;
-    orders[idx].customerReview = comment.trim().isEmpty ? 'خدمة ممتازة' : comment.trim();
     notifyListeners();
     _pushOrderToSupabase(orders[idx], isUpdate: true);
   }
