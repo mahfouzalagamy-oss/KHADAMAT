@@ -1,0 +1,136 @@
+name: Flutter checks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.29.3'
+      - name: Install Android API 36
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36'
+      - name: Prepare Android and web hosts
+        run: |
+          flutter create --no-pub --empty --org com.khadamat.official \
+            --project-name khadamat_app --platforms android,web .
+          git diff --exit-code -- pubspec.yaml pubspec.lock lib test
+          sed -i '/^<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' \
+            android/app/src/main/AndroidManifest.xml
+          sed -i 's/version "8.7.0"/version "8.10.1"/' android/settings.gradle.kts
+          sed -i 's/gradle-8.10.2-all.zip/gradle-8.11.1-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/; s/targetSdk = flutter.targetSdkVersion/targetSdk = 36/' android/app/build.gradle.kts
+          sed -i '/signingConfig = signingConfigs.getByName("debug")/d' android/app/build.gradle.kts
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze
+        run: flutter analyze --no-pub --fatal-infos --fatal-warnings
+      - name: Test
+        run: flutter test --no-pub
+      - name: Build web
+        run: flutter build web --no-pub --release --base-href /KHADAMAT/ --no-tree-shake-icons
+      - name: Build Android verification packages
+        run: |
+          flutter build apk --no-pub --release --no-tree-shake-icons
+          flutter build appbundle --no-pub --release --no-tree-shake-icons
+      - name: Verify Android manifest and bundle
+        run: |
+          apkanalyzer="${ANDROID_HOME}/cmdline-tools/latest/bin/apkanalyzer"
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          test -s "$apk"
+          test "$("$apkanalyzer" manifest application-id "$apk")" = com.khadamat.official.khadamat_app
+          test "$("$apkanalyzer" manifest target-sdk "$apk")" = 36
+          "$apkanalyzer" manifest permissions "$apk" | grep -Fx android.permission.INTERNET
+          # Release compilation runs without a Play upload key on pull requests.
+          bundles=(build/app/outputs/bundle/release/*.aab)
+          test "${#bundles[@]}" -eq 1
+          test -s "${bundles[0]}"
+          keytool -printcert -jarfile "${bundles[0]}" | tee "$RUNNER_TEMP/khadamat-bundle-signing.txt"
+          grep -Fx 'Not a signed jar file' "$RUNNER_TEMP/khadamat-bundle-signing.txt"
+      - name: Verify signing with a temporary key
+        env:
+          KHADAMAT_STORE_PASSWORD: ci-verification-only
+          KHADAMAT_KEY_PASSWORD: ci-verification-only
+        run: |
+          signing_dir="$(mktemp -d "$RUNNER_TEMP/khadamat-signing.XXXXXX")"
+          trap 'rm -f "$signing_dir/verification.p12" "$signing_dir/verification.aab"' EXIT
+          keystore="$signing_dir/verification.p12"
+          keytool -genkeypair -keystore "$keystore" -storetype PKCS12 \
+            -storepass:env KHADAMAT_STORE_PASSWORD -alias verification \
+            -keyalg RSA -keysize 2048 -validity 30 -dname 'CN=KHADAMAT CI Verification'
+          fingerprint="$(keytool -exportcert -keystore "$keystore" \
+            -storepass:env KHADAMAT_STORE_PASSWORD -alias verification | sha256sum | cut -d ' ' -f 1)"
+          bundles=(build/app/outputs/bundle/release/*.aab)
+          python3 tool/sign_android_bundle.py "${bundles[0]}" "$signing_dir/verification.aab" \
+            --keystore "$keystore" --alias verification --sha256 "$fingerprint"
+          sdk_tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$sdk_tools/zipalign" -P 16 -f 4 build/app/outputs/flutter-apk/app-release.apk \
+            "$signing_dir/aligned.apk"
+          "$sdk_tools/apksigner" sign --ks "$keystore" --ks-key-alias verification \
+            --ks-pass env:KHADAMAT_STORE_PASSWORD --key-pass env:KHADAMAT_KEY_PASSWORD \
+            --out "$RUNNER_TEMP/khadamat-verification.apk" "$signing_dir/aligned.apk"
+          "$sdk_tools/apksigner" verify "$RUNNER_TEMP/khadamat-verification.apk"
+          "$sdk_tools/zipalign" -c -P 16 -v 4 "$RUNNER_TEMP/khadamat-verification.apk"
+      - name: Verify native library alignment
+        run: |
+          native_dir="$(mktemp -d "$RUNNER_TEMP/khadamat-native.XXXXXX")"
+          bundle=build/app/outputs/bundle/release/app-release.aab
+          unzip -q "$bundle" 'base/lib/*/*.so' -d "$native_dir"
+          shopt -s nullglob
+          libs=("$native_dir"/base/lib/{arm64-v8a,x86_64}/*.so)
+          test "${#libs[@]}" -gt 0
+          for lib in "${libs[@]}"; do
+            headers="$(readelf -lW "$lib")"
+            mapfile -t alignments < <(awk '$1 == "LOAD" { print $NF }' <<< "$headers")
+            test "${#alignments[@]}" -gt 0
+            for alignment in "${alignments[@]}"; do
+              if (( alignment < 16384 )); then
+                echo "Insufficient 16 KB ELF alignment: ${lib#"$native_dir"/}"
+                exit 1
+              fi
+            done
+          done
+      - name: Enable Android emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install and launch on Android emulator
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: 36
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb shell svc wifi disable
+            adb shell svc data disable
+            adb install "$RUNNER_TEMP/khadamat-verification.apk"
+            adb shell am start -W -n com.khadamat.official.khadamat_app/.MainActivity | grep -F 'Status: ok'
+            sleep 5
+            adb shell pidof com.khadamat.official.khadamat_app
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' | grep -F com.khadamat.official.khadamat_app
+      - name: Save unsigned bundle for upload-key signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: khadamat-unsigned-aab
+          path: mobile_app/build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
