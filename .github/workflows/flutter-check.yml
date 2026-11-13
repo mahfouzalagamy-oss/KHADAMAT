@@ -57,3 +57,53 @@ jobs:
           test -s "${bundles[0]}"
           keytool -printcert -jarfile "${bundles[0]}" | tee "$RUNNER_TEMP/khadamat-bundle-signing.txt"
           grep -Fx 'Not a signed jar file' "$RUNNER_TEMP/khadamat-bundle-signing.txt"
+      - name: Verify signing with a temporary key
+        env:
+          KHADAMAT_STORE_PASSWORD: ci-verification-only
+          KHADAMAT_KEY_PASSWORD: ci-verification-only
+        run: |
+          signing_dir="$(mktemp -d "$RUNNER_TEMP/khadamat-signing.XXXXXX")"
+          trap 'rm -f "$signing_dir/verification.p12" "$signing_dir/verification.aab"' EXIT
+          keystore="$signing_dir/verification.p12"
+          keytool -genkeypair -keystore "$keystore" -storetype PKCS12 \
+            -storepass:env KHADAMAT_STORE_PASSWORD -alias verification \
+            -keyalg RSA -keysize 2048 -validity 30 -dname 'CN=KHADAMAT CI Verification'
+          fingerprint="$(keytool -exportcert -keystore "$keystore" \
+            -storepass:env KHADAMAT_STORE_PASSWORD -alias verification | sha256sum | cut -d ' ' -f 1)"
+          bundles=(build/app/outputs/bundle/release/*.aab)
+          python3 tool/sign_android_bundle.py "${bundles[0]}" "$signing_dir/verification.aab" \
+            --keystore "$keystore" --alias verification --sha256 "$fingerprint"
+          sdk_tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$sdk_tools/zipalign" -P 16 -f 4 build/app/outputs/flutter-apk/app-release.apk \
+            "$signing_dir/aligned.apk"
+          "$sdk_tools/apksigner" sign --ks "$keystore" --ks-key-alias verification \
+            --ks-pass env:KHADAMAT_STORE_PASSWORD --key-pass env:KHADAMAT_KEY_PASSWORD \
+            --out "$RUNNER_TEMP/khadamat-verification.apk" "$signing_dir/aligned.apk"
+          "$sdk_tools/apksigner" verify "$RUNNER_TEMP/khadamat-verification.apk"
+      - name: Enable Android emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install and launch on Android emulator
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb shell svc wifi disable
+            adb shell svc data disable
+            adb install "$RUNNER_TEMP/khadamat-verification.apk"
+            adb shell am start -W -n com.khadamat.official.khadamat_app/.MainActivity | grep -F 'Status: ok'
+            sleep 5
+            adb shell pidof com.khadamat.official.khadamat_app
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' | grep -F com.khadamat.official.khadamat_app
+      - name: Save unsigned bundle for upload-key signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: khadamat-unsigned-aab
+          path: mobile_app/build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
