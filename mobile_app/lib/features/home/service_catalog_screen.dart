@@ -18,6 +18,12 @@ class ServiceCatalogScreen extends StatelessWidget {
         title: const Text('خدمات KHADAMAT'),
         actions: [
           IconButton(
+            tooltip: 'طلباتي',
+            icon: const Icon(Icons.receipt_long_outlined),
+            onPressed: () =>
+                Navigator.pushNamed(context, AppRoutes.customerRequests),
+          ),
+          IconButton(
             tooltip: session.isSignedIn ? 'حسابي' : 'تسجيل الدخول',
             icon:
                 Icon(session.isSignedIn ? Icons.person : Icons.person_outline),
@@ -42,7 +48,7 @@ class ServiceCatalogScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text('محتاج خدمة إيه؟', style: theme.textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                const Text('تصفّح الخدمات. إرسال الطلبات قيد التجهيز.'),
+                const Text('اختَر الخدمة وحدّد المشكلة والمكان والموعد.'),
                 const SizedBox(height: 20),
                 for (final service in services)
                   Card(
@@ -50,6 +56,12 @@ class ServiceCatalogScreen extends StatelessWidget {
                       leading: Icon(service.icon, color: service.color),
                       title: Text(service.name),
                       subtitle: Text(service.subtitle),
+                      trailing: const Icon(Icons.chevron_left),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.createOrder,
+                        arguments: {'serviceCode': service.id},
+                      ),
                     ),
                   ),
               ],
