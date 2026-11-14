@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../../features/auth/otp_login_screen.dart';
 import '../../features/auth/technician_registration_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/home/service_catalog_screen.dart';
 import '../../features/orders/create_order_screen.dart';
+import '../../features/orders/customer_request_history.dart';
+import '../../features/orders/customer_request_screen.dart';
 import '../../features/orders/track_order_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../services/app_state_service.dart';
+import '../services/auth_session.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -13,31 +18,77 @@ class AppRoutes {
   static const String home = '/home';
   static const String createOrder = '/create-order';
   static const String trackOrder = '/track-order';
+  static const String customerRequests = '/customer-requests';
 
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+  static Route<dynamic> onGenerateRoute(
+      RouteSettings settings, AuthSession session) {
+    if (!AppStateService.demoMode &&
+        (settings.name == registerTech || settings.name == trackOrder)) {
+      return MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('خدمات')),
+          body: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child:
+                  Text('هذه الخدمة قيد التجهيز. يمكنك تصفح الخدمات المتاحة.'),
+            ),
+          ),
+        ),
+        settings: settings,
+      );
+    }
     switch (settings.name) {
       case splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen(), settings: settings);
+        return MaterialPageRoute(
+            builder: (_) => const SplashScreen(), settings: settings);
       case login:
-        return MaterialPageRoute(builder: (_) => const OtpLoginScreen(), settings: settings);
+        return MaterialPageRoute(
+            builder: (_) => OtpLoginScreen(session: session),
+            settings: settings);
       case registerTech:
-        return MaterialPageRoute(builder: (_) => const TechnicianRegistrationScreen(), settings: settings);
+        return MaterialPageRoute(
+            builder: (_) => const TechnicianRegistrationScreen(),
+            settings: settings);
       case home:
-        return MaterialPageRoute(builder: (_) => const HomeScreen(), settings: settings);
+        return MaterialPageRoute(builder: (_) => _home, settings: settings);
       case createOrder:
         final args = settings.arguments as Map<String, dynamic>?;
+        if (!AppStateService.demoMode) {
+          final serviceCode = args?['serviceCode'];
+          final services = AppStateService.instance.services;
+          final index =
+              services.indexWhere((service) => service.id == serviceCode);
+          return MaterialPageRoute(
+            builder: (_) => index < 0
+                ? _home
+                : CustomerRequestScreen(service: services[index]),
+            settings: settings,
+          );
+        }
         return MaterialPageRoute(
-          builder: (_) => CreateOrderScreen(initialServiceName: args?['service'] as String?),
+          builder: (_) => CreateOrderScreen(
+              initialServiceName: args?['service'] as String?),
+          settings: settings,
+        );
+      case customerRequests:
+        return MaterialPageRoute(
+          builder: (_) => CustomerRequestHistory(session: session),
           settings: settings,
         );
       case trackOrder:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => TrackOrderScreen(orderId: args?['orderId'] as String?),
+          builder: (_) =>
+              TrackOrderScreen(orderId: args?['orderId'] as String?),
           settings: settings,
         );
       default:
-        return MaterialPageRoute(builder: (_) => const HomeScreen(), settings: settings);
+        return MaterialPageRoute(builder: (_) => _home, settings: settings);
     }
   }
+
+  static Widget get _home => AppStateService.demoMode
+      ? const HomeScreen()
+      : const ServiceCatalogScreen();
 }

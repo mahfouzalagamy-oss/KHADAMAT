@@ -1,77 +1,208 @@
 import 'package:flutter/material.dart';
-import '../../core/routes/app_routes.dart';
-import '../../core/services/app_state_service.dart';
-import '../../core/theme/theme.dart';
+import 'package:flutter/services.dart';
+
+import '../../core/services/auth_session.dart';
 
 class OtpLoginScreen extends StatefulWidget {
-  const OtpLoginScreen({super.key});
+  const OtpLoginScreen({super.key, required this.session});
+
+  final AuthSession session;
 
   @override
   State<OtpLoginScreen> createState() => _OtpLoginScreenState();
 }
 
 class _OtpLoginScreenState extends State<OtpLoginScreen> {
-  final _nameCtrl = TextEditingController(text: 'أحمد محمود');
-  final _phoneCtrl = TextEditingController(text: '01012345678');
-  final _otpCtrl = TextEditingController(text: '1234');
-  int _role = 0;
+  final _phoneController = TextEditingController();
+  final _codeController = TextEditingController();
+  String? _phone;
+  String? _error;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(Future<void> Function() action, String failure) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await action();
+    } on Exception {
+      if (mounted) setState(() => _error = failure);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _sendCode() async {
+    final phone = AuthSession.egyptianPhone(_phoneController.text);
+    if (phone == null) {
+      setState(() => _error = 'اكتب رقم موبايل مصري صحيح.');
+      return;
+    }
+    await _run(() async {
+      await widget.session.requestCode(phone);
+      if (mounted) setState(() => _phone = phone);
+    }, 'تعذّر إرسال الرمز. تأكد من الرقم وحاول مرة أخرى بعد قليل.');
+  }
+
+  Future<void> _verifyCode() async {
+    final code = AuthSession.normalizeDigits(_codeController.text).trim();
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) {
+      setState(() => _error = 'اكتب رمز التحقق المكوّن من 6 أرقام.');
+      return;
+    }
+    await _run(() async {
+      await widget.session.verifyCode(_phone!, code);
+      if (mounted) Navigator.of(context).maybePop();
+    }, 'تعذّر التحقق من الرمز. تأكد منه أو اطلب رمزًا جديدًا.');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final session = widget.session;
     return Scaffold(
-      appBar: AppBar(title: const Text('دخول خدمات | KHADAMAT')),
+      appBar: AppBar(
+        title: Text(session.isSignedIn ? 'حسابي' : 'تسجيل الدخول'),
+      ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                child: Padding(
+        child: ListenableBuilder(
+          listenable: session,
+          builder:
+              (context, _) => Align(
+                alignment: Alignment.topCenter,
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text('خدمات | KHADAMAT', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.customerPrimary)),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 6,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          ChoiceChip(label: const Text('عميل'), selected: _role == 0, onSelected: (_) => setState(() => _role = 0)),
-                          ChoiceChip(label: const Text('فني'), selected: _role == 1, onSelected: (_) => setState(() => _role = 1)),
-                          ChoiceChip(label: const Text('شركة'), selected: _role == 2, onSelected: (_) => setState(() => _role = 2)),
-                          ChoiceChip(label: const Text('إدارة'), selected: _role == 3, onSelected: (_) => setState(() => _role = 3)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!session.isConfigured) ...[
+                          const Text(
+                            'نسخة المعاينة تتيح تصفح الخدمات وتجهيز الطلب. '
+                            'تسجيل الحساب يحتاج اتصال التطبيق بخدمة التحقق.',
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed: () => Navigator.of(context).maybePop(),
+                            child: const Text('رجوع'),
+                          ),
+                        ] else if (session.isSignedIn) ...[
+                          Text(
+                            session.phone ?? '',
+                            textDirection: TextDirection.ltr,
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed:
+                                _busy
+                                    ? null
+                                    : () => _run(() async {
+                                      await session.signOut();
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _phone = null;
+                                        _codeController.clear();
+                                      });
+                                    }, 'تعذّر تسجيل الخروج. حاول مرة أخرى.'),
+                            child: const Text('تسجيل الخروج'),
+                          ),
+                        ] else ...[
+                          Text(
+                            _phone == null
+                                ? 'سجّل برقم موبايلك'
+                                : 'أدخل رمز التحقق',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _phone == null
+                                ? 'هنبعت لك رمز تأكيد برسالة SMS. أول تسجيل ينشئ حسابك.'
+                                : 'اكتب الرمز اللي وصلك في رسالة SMS.',
+                          ),
+                          const SizedBox(height: 16),
+                          if (_phone == null)
+                            TextField(
+                              controller: _phoneController,
+                              enabled: !_busy,
+                              keyboardType: TextInputType.phone,
+                              autofillHints: const [
+                                AutofillHints.telephoneNumber,
+                              ],
+                              textDirection: TextDirection.ltr,
+                              decoration: const InputDecoration(
+                                labelText: 'رقم الموبايل',
+                                hintText: '01XXXXXXXXX',
+                              ),
+                            )
+                          else ...[
+                            Text(_phone!, textDirection: TextDirection.ltr),
+                            TextField(
+                              controller: _codeController,
+                              enabled: !_busy,
+                              keyboardType: TextInputType.number,
+                              autofillHints: const [AutofillHints.oneTimeCode],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp('[0-9٠-٩۰-۹]'),
+                                ),
+                                LengthLimitingTextInputFormatter(6),
+                              ],
+                              textDirection: TextDirection.ltr,
+                              decoration: const InputDecoration(
+                                labelText: 'رمز التحقق',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed:
+                                  _busy
+                                      ? null
+                                      : () => setState(() {
+                                        _phone = null;
+                                        _error = null;
+                                        _codeController.clear();
+                                      }),
+                              child: const Text('تغيير الرقم أو طلب رمز جديد'),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed:
+                                _busy
+                                    ? null
+                                    : _phone == null
+                                    ? _sendCode
+                                    : _verifyCode,
+                            child: Text(
+                              _phone == null
+                                  ? 'أرسل رمز التحقق'
+                                  : 'تأكيد الرمز',
+                            ),
+                          ),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'الاسم', prefixIcon: Icon(Icons.person))),
-                      const SizedBox(height: 12),
-                      TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'رقم الجوال', prefixIcon: Icon(Icons.phone_android))),
-                      const SizedBox(height: 12),
-                      TextField(controller: _otpCtrl, decoration: const InputDecoration(labelText: 'كود التحقق OTP (1234)', prefixIcon: Icon(Icons.lock))),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          AppStateService.instance.sendOtp(_phoneCtrl.text, _nameCtrl.text, _role);
-                          AppStateService.instance.verifyOtp(_otpCtrl.text);
-                          Navigator.pushReplacementNamed(context, AppRoutes.home);
-                        },
-                        child: const Text('دخول فوري'),
-                      ),
-                      const SizedBox(height: 10),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.badge_outlined, size: 16),
-                        label: const Text('تسجيل فني جديد بالهوية'),
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.registerTech),
-                      ),
-                    ],
+                        if (_busy) const LinearProgressIndicator(),
+                        if (_error != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
     );
