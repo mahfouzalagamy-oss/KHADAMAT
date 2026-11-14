@@ -24,6 +24,37 @@ jobs:
         run: supabase db start
       - name: Verify identity and permissions
         run: supabase test db --local
+  phone-request-flow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@d347ba47d3fb7eeeddbbc793bc8d4779caf773ea # v1.5.0
+        with:
+          version: '2.84.4'
+      - name: Start local API with test-only codes
+        run: |
+          cat >> supabase/config.toml <<'EOF'
+
+          [auth.sms]
+          enable_signup = true
+          enable_confirmations = true
+
+          [auth.sms.twilio]
+          enabled = true
+          account_sid = "placeholder"
+          message_service_sid = "placeholder"
+          auth_token = "placeholder"
+
+          [auth.sms.test_otp]
+          201012345678 = "431278"
+          201112345678 = "642819"
+          EOF
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,storage-api,realtime,inbucket
+      - name: Exercise Auth and request API
+        run: |
+          export KHADAMAT_LOCAL_ANON_KEY="$(supabase status -o json | jq -er '.ANON_KEY')"
+          python3 supabase/phone_request_flow.py
   flutter-auth:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
