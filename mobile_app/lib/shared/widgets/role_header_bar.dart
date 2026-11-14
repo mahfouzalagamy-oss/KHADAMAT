@@ -35,38 +35,6 @@ class RoleHeaderBar extends StatelessWidget {
     );
   }
 
-  void _showSupabaseModal(BuildContext context, AppStateService state) {
-    final urlCtrl = TextEditingController(text: state.supabaseUrl);
-    final keyCtrl = TextEditingController(text: state.supabaseAnonKey);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('إعدادات السحابة (Supabase)'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: urlCtrl, decoration: const InputDecoration(labelText: 'Project URL')),
-              const SizedBox(height: 10),
-              TextField(controller: keyCtrl, decoration: const InputDecoration(labelText: 'Anon Key')),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () async {
-                await state.configureSupabaseConnection(urlCtrl.text, keyCtrl.text);
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              child: const Text('مزامنة الآن'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = AppStateService.instance;
@@ -109,26 +77,6 @@ class RoleHeaderBar extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 8,
                 children: [
-                  InkWell(
-                    onTap: () => _showSupabaseModal(context, state),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: state.isCloudConnected ? AppColors.success.withAlpha(40) : Colors.white12,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: state.isCloudConnected ? AppColors.success : Colors.white24),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.circle, size: 9, color: state.isCloudConnected ? AppColors.success : AppColors.goldAccent),
-                          const SizedBox(width: 5),
-                          Text(state.isCloudConnected ? 'متصل' : 'السحابة', style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(color: Colors.white.withAlpha(20), borderRadius: BorderRadius.circular(12)),
