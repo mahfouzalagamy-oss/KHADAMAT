@@ -4,6 +4,8 @@ import '../../features/auth/technician_registration_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/home/service_catalog_screen.dart';
 import '../../features/orders/create_order_screen.dart';
+import '../../features/orders/customer_request_history.dart';
+import '../../features/orders/customer_request_screen.dart';
 import '../../features/orders/track_order_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../services/app_state_service.dart';
@@ -16,13 +18,12 @@ class AppRoutes {
   static const String home = '/home';
   static const String createOrder = '/create-order';
   static const String trackOrder = '/track-order';
+  static const String customerRequests = '/customer-requests';
 
   static Route<dynamic> onGenerateRoute(
       RouteSettings settings, AuthSession session) {
     if (!AppStateService.demoMode &&
-        (settings.name == registerTech ||
-            settings.name == createOrder ||
-            settings.name == trackOrder)) {
+        (settings.name == registerTech || settings.name == trackOrder)) {
       return MaterialPageRoute(
         builder: (context) => Scaffold(
           appBar: AppBar(title: const Text('خدمات')),
@@ -53,9 +54,26 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => _home, settings: settings);
       case createOrder:
         final args = settings.arguments as Map<String, dynamic>?;
+        if (!AppStateService.demoMode) {
+          final serviceCode = args?['serviceCode'];
+          final services = AppStateService.instance.services;
+          final index =
+              services.indexWhere((service) => service.id == serviceCode);
+          return MaterialPageRoute(
+            builder: (_) => index < 0
+                ? _home
+                : CustomerRequestScreen(service: services[index]),
+            settings: settings,
+          );
+        }
         return MaterialPageRoute(
           builder: (_) => CreateOrderScreen(
               initialServiceName: args?['service'] as String?),
+          settings: settings,
+        );
+      case customerRequests:
+        return MaterialPageRoute(
+          builder: (_) => CustomerRequestHistory(session: session),
           settings: settings,
         );
       case trackOrder:
