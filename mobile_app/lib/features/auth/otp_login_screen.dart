@@ -53,8 +53,8 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
   }
 
   Future<void> _verifyCode() async {
-    final code = _codeController.text.trim();
-    if (code.length != 6) {
+    final code = AuthSession.normalizeDigits(_codeController.text).trim();
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(code)) {
       setState(() => _error = 'اكتب رمز التحقق المكوّن من 6 أرقام.');
       return;
     }
@@ -68,110 +68,141 @@ class _OtpLoginScreenState extends State<OtpLoginScreen> {
   Widget build(BuildContext context) {
     final session = widget.session;
     return Scaffold(
-      appBar: AppBar(title: const Text('حسابي')),
+      appBar: AppBar(
+        title: Text(session.isSignedIn ? 'حسابي' : 'تسجيل الدخول'),
+      ),
       body: SafeArea(
         child: ListenableBuilder(
           listenable: session,
-          builder: (context, _) => Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!session.isConfigured)
-                      const Text('تسجيل الدخول غير متاح في هذه النسخة.')
-                    else if (session.isSignedIn) ...[
-                      Text(session.phone ?? '',
-                          textDirection: TextDirection.ltr),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(() async {
-                                  await session.signOut();
-                                  if (!mounted) return;
-                                  setState(() {
-                                    _phone = null;
-                                    _codeController.clear();
-                                  });
-                                }, 'تعذّر تسجيل الخروج. حاول مرة أخرى.'),
-                        child: const Text('تسجيل الخروج'),
-                      ),
-                    ] else ...[
-                      Text(
-                        _phone == null
-                            ? 'سجّل برقم موبايلك'
-                            : 'أدخل رمز التحقق',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 16),
-                      if (_phone == null)
-                        TextField(
-                          controller: _phoneController,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.phone,
-                          autofillHints: const [AutofillHints.telephoneNumber],
-                          textDirection: TextDirection.ltr,
-                          decoration: const InputDecoration(
-                            labelText: 'رقم الموبايل',
-                            hintText: '01XXXXXXXXX',
+          builder:
+              (context, _) => Align(
+                alignment: Alignment.topCenter,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!session.isConfigured) ...[
+                          const Text(
+                            'نسخة المعاينة تتيح تصفح الخدمات وتجهيز الطلب. '
+                            'تسجيل الحساب يحتاج اتصال التطبيق بخدمة التحقق.',
                           ),
-                        )
-                      else ...[
-                        Text(_phone!, textDirection: TextDirection.ltr),
-                        TextField(
-                          controller: _codeController,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.number,
-                          autofillHints: const [AutofillHints.oneTimeCode],
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed: () => Navigator.of(context).maybePop(),
+                            child: const Text('رجوع'),
+                          ),
+                        ] else if (session.isSignedIn) ...[
+                          Text(
+                            session.phone ?? '',
+                            textDirection: TextDirection.ltr,
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed:
+                                _busy
+                                    ? null
+                                    : () => _run(() async {
+                                      await session.signOut();
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _phone = null;
+                                        _codeController.clear();
+                                      });
+                                    }, 'تعذّر تسجيل الخروج. حاول مرة أخرى.'),
+                            child: const Text('تسجيل الخروج'),
+                          ),
+                        ] else ...[
+                          Text(
+                            _phone == null
+                                ? 'سجّل برقم موبايلك'
+                                : 'أدخل رمز التحقق',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _phone == null
+                                ? 'هنبعت لك رمز تأكيد برسالة SMS. أول تسجيل ينشئ حسابك.'
+                                : 'اكتب الرمز اللي وصلك في رسالة SMS.',
+                          ),
+                          const SizedBox(height: 16),
+                          if (_phone == null)
+                            TextField(
+                              controller: _phoneController,
+                              enabled: !_busy,
+                              keyboardType: TextInputType.phone,
+                              autofillHints: const [
+                                AutofillHints.telephoneNumber,
+                              ],
+                              textDirection: TextDirection.ltr,
+                              decoration: const InputDecoration(
+                                labelText: 'رقم الموبايل',
+                                hintText: '01XXXXXXXXX',
+                              ),
+                            )
+                          else ...[
+                            Text(_phone!, textDirection: TextDirection.ltr),
+                            TextField(
+                              controller: _codeController,
+                              enabled: !_busy,
+                              keyboardType: TextInputType.number,
+                              autofillHints: const [AutofillHints.oneTimeCode],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp('[0-9٠-٩۰-۹]'),
+                                ),
+                                LengthLimitingTextInputFormatter(6),
+                              ],
+                              textDirection: TextDirection.ltr,
+                              decoration: const InputDecoration(
+                                labelText: 'رمز التحقق',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed:
+                                  _busy
+                                      ? null
+                                      : () => setState(() {
+                                        _phone = null;
+                                        _error = null;
+                                        _codeController.clear();
+                                      }),
+                              child: const Text('تغيير الرقم أو طلب رمز جديد'),
+                            ),
                           ],
-                          textDirection: TextDirection.ltr,
-                          decoration:
-                              const InputDecoration(labelText: 'رمز التحقق'),
-                        ),
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () => setState(() {
-                                    _phone = null;
-                                    _error = null;
-                                    _codeController.clear();
-                                  }),
-                          child: const Text('تغيير الرقم أو طلب رمز جديد'),
-                        ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed:
+                                _busy
+                                    ? null
+                                    : _phone == null
+                                    ? _sendCode
+                                    : _verifyCode,
+                            child: Text(
+                              _phone == null
+                                  ? 'أرسل رمز التحقق'
+                                  : 'تأكيد الرمز',
+                            ),
+                          ),
+                        ],
+                        if (_busy) const LinearProgressIndicator(),
+                        if (_error != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
                       ],
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: _busy
-                            ? null
-                            : _phone == null
-                                ? _sendCode
-                                : _verifyCode,
-                        child: Text(
-                            _phone == null ? 'أرسل رمز التحقق' : 'تأكيد الرمز'),
-                      ),
-                    ],
-                    if (_busy) const LinearProgressIndicator(),
-                    if (_error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          _error!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error),
-                        ),
-                      ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
         ),
       ),
     );
