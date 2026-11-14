@@ -22,6 +22,8 @@ class AuthSession extends ChangeNotifier {
 
   bool get isConfigured => _client != null;
   bool get isSignedIn => _session != null;
+  String? get userId => _session?.user.id;
+  SupabaseClient? get authenticatedClient => isSignedIn ? _client : null;
   String? get phone => _session?.user.phone;
   bool get isTechnician => _roles.contains('technician');
   bool get isPlatformAdmin => _roles.contains('platform_admin');
