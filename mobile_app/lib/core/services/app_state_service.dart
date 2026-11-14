@@ -1,30 +1,19 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../shared/models/app_models.dart';
 
 class AppStateService extends ChangeNotifier {
   static final AppStateService instance = AppStateService._internal();
 
-  AppStateService._internal() {
-    Future.microtask(() => startRealtimePolling());
-  }
+  AppStateService._internal();
 
-  String supabaseUrl = 'https://dccgwosimmcwfwcffghd.supabase.co';
-  String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjY2d3b3NpbW1jd2Z3Y2ZmZ2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ0OTY3MTMsImV4cCI6MjExMDA3MjcxM30.7w6V6RGpil3vZnDqyIE7G4X2IdaP6A4qu-akg0RRk-c';
-  String geminiApiKey = '';
-  bool isCloudConnected = false;
-  String lastSyncStatus = 'جاري الاتصال...';
-  Timer? _syncTimer;
+  static const demoMode = bool.fromEnvironment('KHADAMAT_DEMO');
 
-  int currentRole = 0;
-  bool isAuthenticated = false;
+  int _currentRole = 0;
+  int get currentRole => _currentRole;
   bool technicianOnlineToggle = true;
   String currentUserName = 'أحمد محمود';
   String currentUserPhone = '01012345678';
-  String selectedCity = 'الدوحة - قطر';
-  String lastOtp = '1234';
+  String selectedCity = 'المنصورة';
 
   double customerWallet = 350.0;
   double totalCashbackEarned = 45.0;
@@ -32,10 +21,6 @@ class AppStateService extends ChangeNotifier {
   String? activeOrderId = 'KH-9041';
 
   final List<String> egyptCities = const [
-    'الدوحة - قطر',
-    'لوسيل - قطر',
-    'الريان - قطر',
-    'الوكرة - قطر',
     'القاهرة',
     'الجيزة',
     'الإسكندرية',
@@ -287,107 +272,9 @@ class AppStateService extends ChangeNotifier {
     ),
   ];
 
-  Map<String, String> get _headers => {
-        'apikey': supabaseAnonKey.trim(),
-        'Authorization': 'Bearer ${supabaseAnonKey.trim()}',
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-      };
-
-  String get _cleanBaseUrl => supabaseUrl.trim().replaceAll(RegExp(r'/$'), '');
-
-  Future<bool> connectSupabase(String url, String key) {
-    return configureSupabaseConnection(url, key);
-  }
-
-  Future<bool> configureSupabaseConnection(String url, String key) async {
-    supabaseUrl = url.trim();
-    supabaseAnonKey = key.trim();
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-      isCloudConnected = false;
-      lastSyncStatus = 'غير متصل';
-      notifyListeners();
-      return false;
-    }
-    final ok = await syncFromSupabase();
-    if (ok) {
-      startRealtimePolling();
-    }
-    return ok;
-  }
-
-  void startRealtimePolling() {
-    _syncTimer?.cancel();
-    if (supabaseUrl.trim().isEmpty || supabaseAnonKey.trim().isEmpty) return;
-    syncFromSupabase();
-    _syncTimer = Timer.periodic(const Duration(seconds: 4), (_) {
-      syncFromSupabase();
-    });
-  }
-
-  Future<bool> syncFromSupabase() async {
-    if (supabaseUrl.trim().isEmpty || supabaseAnonKey.trim().isEmpty) return false;
-    try {
-      final ordersUri = Uri.parse('$_cleanBaseUrl/rest/v1/orders?select=*&order=created_at.desc');
-      final res = await http.get(ordersUri, headers: _headers).timeout(const Duration(seconds: 6));
-
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        final List<dynamic> data = jsonDecode(utf8.decode(res.bodyBytes)) as List<dynamic>;
-        if (data.isNotEmpty) {
-          orders
-            ..clear()
-            ..addAll(data.map((item) => OrderItemModel.fromSupabaseJson(item as Map<String, dynamic>)));
-          activeOrderId ??= orders.first.id;
-        }
-        isCloudConnected = true;
-        lastSyncStatus = 'متصل حياً (${orders.length})';
-      } else {
-        isCloudConnected = false;
-        lastSyncStatus = 'كود السحابة: ${res.statusCode}';
-      }
-
-      final notifUri = Uri.parse('$_cleanBaseUrl/rest/v1/notifications?select=*&order=id.desc&limit=10');
-      final notifRes = await http.get(notifUri, headers: _headers).timeout(const Duration(seconds: 5));
-      if (notifRes.statusCode >= 200 && notifRes.statusCode < 300) {
-        final List<dynamic> nData = jsonDecode(utf8.decode(notifRes.bodyBytes)) as List<dynamic>;
-        if (nData.isNotEmpty) {
-          notifications
-            ..clear()
-            ..addAll(nData.map((n) => (n['message'] ?? '').toString()).where((s) => s.isNotEmpty));
-        }
-      }
-      notifyListeners();
-      return isCloudConnected;
-    } catch (e) {
-      isCloudConnected = false;
-      lastSyncStatus = 'وضع محلي';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  Future<void> _pushOrderToSupabase(OrderItemModel order, {bool isUpdate = false}) async {
-    if (supabaseUrl.trim().isEmpty || supabaseAnonKey.trim().isEmpty) return;
-    try {
-      if (isUpdate) {
-        final uri = Uri.parse('$_cleanBaseUrl/rest/v1/orders?id=eq.${order.id}');
-        await http.patch(uri, headers: _headers, body: jsonEncode(order.toSupabaseJson()));
-      } else {
-        final uri = Uri.parse('$_cleanBaseUrl/rest/v1/orders');
-        await http.post(uri, headers: _headers, body: jsonEncode(order.toSupabaseJson()));
-      }
-      await syncFromSupabase();
-    } catch (_) {}
-  }
-
-  Future<void> _pushNotificationToSupabase(String message) async {
+  void _addNotification(String message) {
     notifications.insert(0, message);
     notifyListeners();
-    if (supabaseUrl.trim().isEmpty || supabaseAnonKey.trim().isEmpty) return;
-    try {
-      final uri = Uri.parse('$_cleanBaseUrl/rest/v1/notifications');
-      await http.post(uri, headers: _headers, body: jsonEncode({'message': message}));
-    } catch (_) {}
   }
 
   Future<AiDiagnosisResultModel> runSmartAiDiagnosis({
@@ -453,7 +340,7 @@ class AppStateService extends ChangeNotifier {
       paymentMethod: 'فودافون كاش / إنستا باي',
       price: 300,
     );
-    _pushNotificationToSupabase('🚨 نداء طوارئ SOS #${order.id} ($serviceName)');
+    _addNotification('🚨 نداء طوارئ SOS #${order.id} ($serviceName)');
     return order;
   }
 
@@ -467,7 +354,6 @@ class AppStateService extends ChangeNotifier {
       order.price += part.officialPrice;
       order.chatMessages.add('إضافة قطعة رسمية للمقايسة: [${part.name}] (${part.officialPrice}).');
       notifyListeners();
-      _pushOrderToSupabase(order, isUpdate: true);
     }
   }
 
@@ -480,7 +366,6 @@ class AppStateService extends ChangeNotifier {
       order.price = (order.price - 50).clamp(100, 99999);
       order.chatMessages.add('اعتماد المقايسة ✅ وخصم المعاينة (-50). الصافي: ${order.price}.');
       notifyListeners();
-      _pushOrderToSupabase(order, isUpdate: true);
     }
   }
 
@@ -495,7 +380,6 @@ class AppStateService extends ChangeNotifier {
       order.chatMessages.add('تم تفعيل رابط الأمان العائلي 🛡️: ${order.familyTrackingLink}');
     }
     notifyListeners();
-    _pushOrderToSupabase(order, isUpdate: true);
   }
 
   void updateSparePartPrice(String partId, int newPrice) {
@@ -558,7 +442,7 @@ class AppStateService extends ChangeNotifier {
       ),
     );
     notifyListeners();
-    _pushNotificationToSupabase('اعتماد شركة جديدة في بوابة الأعمال: $name ($commercialReg)');
+    _addNotification('اعتماد شركة جديدة في بوابة الأعمال: $name ($commercialReg)');
   }
 
   void incrementCompanyAmcContract(String compId) {
@@ -566,7 +450,7 @@ class AppStateService extends ChangeNotifier {
     if (idx != -1) {
       companies[idx].activeAmcContracts += 1;
       notifyListeners();
-      _pushNotificationToSupabase('إصدار عقد صيانة سنوي AMC جديد عبر ${companies[idx].name}');
+      _addNotification('إصدار عقد صيانة سنوي AMC جديد عبر ${companies[idx].name}');
     }
   }
 
@@ -605,7 +489,7 @@ class AppStateService extends ChangeNotifier {
     );
     technicians.insert(0, tech);
     notifyListeners();
-    _pushNotificationToSupabase('طلب توثيق فني جديد: ($name - $specialty) بانتظار موافقة الإدارة.');
+    _addNotification('طلب توثيق فني جديد: ($name - $specialty) بانتظار موافقة الإدارة.');
     return tech;
   }
 
@@ -616,7 +500,7 @@ class AppStateService extends ChangeNotifier {
     tech.isVerified = approve;
     tech.approvalStatus = approve ? 'approved' : 'rejected';
     notifyListeners();
-    _pushNotificationToSupabase(
+    _addNotification(
       approve ? 'تم اعتماد هوية الفني (${tech.name}) ✅' : 'تم رفض طلب الفني (${tech.name}) ❌',
     );
   }
@@ -630,7 +514,6 @@ class AppStateService extends ChangeNotifier {
     order.attachedPhotos.add(fileName);
     order.chatMessages.add('تم توثيق الصورة ($fileName).');
     notifyListeners();
-    _pushOrderToSupabase(order, isUpdate: true);
   }
 
   void markOrderPaid(String orderId, String methodLabel, String referenceCode) {
@@ -646,8 +529,7 @@ class AppStateService extends ChangeNotifier {
       'تم السداد (${order.price}) عبر $methodLabel ($referenceCode) + كاش باك $cashback 🎁',
     );
     notifyListeners();
-    _pushOrderToSupabase(order, isUpdate: true);
-    _pushNotificationToSupabase('سداد الطلب #${order.id} وإضافة $cashback كاش باك.');
+    _addNotification('سداد الطلب #${order.id} وإضافة $cashback كاش باك.');
   }
 
   void rechargeWalletViaSandbox(int amount, String methodLabel, String referenceCode) {
@@ -655,34 +537,18 @@ class AppStateService extends ChangeNotifier {
     customerWallet += (amount + bonus);
     totalCashbackEarned += bonus;
     notifyListeners();
-    _pushNotificationToSupabase('شحن المحفظة بـ $amount + هدية $bonus عبر $methodLabel.');
+    _addNotification('شحن المحفظة بـ $amount + هدية $bonus عبر $methodLabel.');
   }
 
   void setRole(int role) {
-    currentRole = role;
+    if (!demoMode || role < 0 || role > 3) return;
+    _currentRole = role;
     notifyListeners();
   }
 
   void setCity(String city) {
     selectedCity = city;
     notifyListeners();
-  }
-
-  String sendOtp(String phone, String name, int role) {
-    currentUserPhone = phone;
-    currentUserName = name.trim().isEmpty ? 'عميل خدمات' : name.trim();
-    currentRole = role;
-    lastOtp = '1234';
-    return lastOtp;
-  }
-
-  bool verifyOtp(String code) {
-    if (code.trim() == '1234' || code.trim() == lastOtp) {
-      isAuthenticated = true;
-      notifyListeners();
-      return true;
-    }
-    return false;
   }
 
   OrderItemModel createOrder({
@@ -763,8 +629,7 @@ class AppStateService extends ChangeNotifier {
     activeOrderId = order.id;
     notifyListeners();
 
-    _pushOrderToSupabase(order, isUpdate: false);
-    _pushNotificationToSupabase('طلب جديد #$id ($serviceName) في $selectedCity');
+    _addNotification('طلب جديد #$id ($serviceName) في $selectedCity');
     return order;
   }
 
@@ -786,7 +651,6 @@ class AppStateService extends ChangeNotifier {
       order.chatMessages.add('تحديث المرحلة: ${order.statusText}');
     }
     notifyListeners();
-    _pushOrderToSupabase(order, isUpdate: true);
   }
 
   void sendChatMessage(String orderId, String sender, String text) {
@@ -795,7 +659,6 @@ class AppStateService extends ChangeNotifier {
     if (idx == -1) return;
     orders[idx].chatMessages.add('$sender: ${text.trim()}');
     notifyListeners();
-    _pushOrderToSupabase(orders[idx], isUpdate: true);
   }
 
   OrderItemModel get activeOrder {
