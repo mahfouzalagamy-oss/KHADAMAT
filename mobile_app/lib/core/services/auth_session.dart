@@ -28,14 +28,18 @@ class AuthSession extends ChangeNotifier {
   bool get isTechnician => _roles.contains('technician');
   bool get isPlatformAdmin => _roles.contains('platform_admin');
 
-  static String? egyptianPhone(String value) {
+  static String normalizeDigits(String value) {
     const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
     const easternDigits = '۰۱۲۳۴۵۶۷۸۹';
-    final phone = value.replaceAllMapped(RegExp('[٠-٩۰-۹]'), (match) {
+    return value.replaceAllMapped(RegExp('[٠-٩۰-۹]'), (match) {
       final digit = match.group(0)!;
       final index = arabicDigits.indexOf(digit);
       return (index == -1 ? easternDigits.indexOf(digit) : index).toString();
-    }).replaceAll(RegExp(r'[\s()-]'), '');
+    });
+  }
+
+  static String? egyptianPhone(String value) {
+    final phone = normalizeDigits(value).replaceAll(RegExp(r'[\s()-]'), '');
     if (RegExp(r'^01[0125][0-9]{8}$').hasMatch(phone)) {
       return '+20${phone.substring(1)}';
     }
