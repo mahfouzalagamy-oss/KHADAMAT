@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/services/auth_session.dart';
 import '../../shared/models/app_models.dart';
+import 'customer_request_draft.dart';
 
 class CustomerRequestScreen extends StatefulWidget {
   const CustomerRequestScreen({super.key, required this.service});
@@ -27,6 +28,72 @@ class _CustomerRequestScreenState extends State<CustomerRequestScreen> {
   String? _submitterId;
   String? _error;
   String? _requestId;
+  late final CustomerRequestDraftStore _draft;
+  bool _draftInitialized = false;
+  bool _loadingDraft = true;
+  bool _savingDraft = false;
+  CustomerRequestDraftStore? _submissionDraft;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final session = AuthSessionScope.of(context);
+    if (_draftInitialized) return;
+    _draftInitialized = true;
+    _draft = CustomerRequestDraftStore(widget.service.id, session.userId);
+    _restoreDraft();
+  }
+
+  Future<void> _restoreDraft() async {
+    try {
+      final data = await _draft.read();
+      if (!mounted || data == null) return;
+      _description.text = data['description'] as String? ?? '';
+      _district.text = data['district'] as String? ?? '';
+      _address.text = data['address'] as String? ?? '';
+      final appointment =
+          DateTime.tryParse(data['appointment'] as String? ?? '');
+      _submissionId = data['submissionId'] as String?;
+      _submitterId = data['submitterId'] as String?;
+      _appointment = _submissionId != null ||
+              (appointment?.isAfter(DateTime.now()) ?? false)
+          ? appointment?.toLocal()
+          : null;
+      if (_submissionId != null) {
+        _step = 2;
+        _submissionDraft = _draft;
+      }
+    } on Exception {
+      if (mounted) _error = 'تعذّر استعادة المسودة.';
+    } finally {
+      if (mounted) setState(() => _loadingDraft = false);
+    }
+  }
+
+  Map<String, Object?> _draftData() => {
+        'description': _description.text,
+        'district': _district.text,
+        'address': _address.text,
+        'appointment': _appointment?.toUtc().toIso8601String(),
+        'submissionId': _submissionId,
+        'submitterId': _submitterId,
+      };
+
+  Future<void> _saveDraft() async {
+    setState(() => _savingDraft = true);
+    try {
+      await _draft.save(_draftData());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم حفظ المسودة على هذا الجهاز.')),
+        );
+      }
+    } on Exception {
+      if (mounted) setState(() => _error = 'تعذّر حفظ المسودة.');
+    } finally {
+      if (mounted) setState(() => _savingDraft = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -99,6 +166,9 @@ class _CustomerRequestScreenState extends State<CustomerRequestScreen> {
       }
       _submitterId = userId;
       _submissionId ??= _newSubmissionId();
+      _submissionDraft ??= CustomerRequestDraftStore(widget.service.id, userId);
+      await _submissionDraft!.save(_draftData());
+      if (!mounted || session.userId != userId) return;
       final id = await session.authenticatedClient!.rpc<String>(
         'khadamat_submit_request',
         params: {
@@ -112,6 +182,12 @@ class _CustomerRequestScreenState extends State<CustomerRequestScreen> {
       );
       if (mounted && session.userId == userId) {
         setState(() => _requestId = id);
+      }
+      try {
+        await _submissionDraft!.clear();
+        await _draft.clear();
+      } on Exception {
+        // A saved retry still uses the same idempotency key.
       }
     } on Exception {
       if (mounted) {
@@ -138,164 +214,180 @@ class _CustomerRequestScreenState extends State<CustomerRequestScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text('طلب ${widget.service.name}')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 580),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: _requestId != null
-                  ? [
-                      const Icon(Icons.check_circle_outline, size: 56),
-                      const SizedBox(height: 16),
-                      Text('تم إرسال طلبك',
-                          style: theme.textTheme.headlineSmall),
-                      const SizedBox(height: 8),
-                      SelectableText(_requestId!,
-                          textDirection: TextDirection.ltr),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: () => Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.customerRequests,
-                        ),
-                        child: const Text('عرض طلباتي'),
-                      ),
-                    ]
-                  : [
-                      Row(
-                        children: [
-                          for (var i = 0; i < steps.length; i++)
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 15,
-                                    backgroundColor: i == _step
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme
-                                            .surfaceContainerHighest,
-                                    foregroundColor: i == _step
-                                        ? theme.colorScheme.onPrimary
-                                        : theme.colorScheme.onSurface,
-                                    child: Text('${i + 1}'),
+      body: _loadingDraft
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 580),
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: _requestId != null
+                        ? [
+                            const Icon(Icons.check_circle_outline, size: 56),
+                            const SizedBox(height: 16),
+                            Text('تم إرسال طلبك',
+                                style: theme.textTheme.headlineSmall),
+                            const SizedBox(height: 8),
+                            SelectableText(_requestId!,
+                                textDirection: TextDirection.ltr),
+                            const SizedBox(height: 24),
+                            FilledButton(
+                              onPressed: () => Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.customerRequests,
+                              ),
+                              child: const Text('عرض طلباتي'),
+                            ),
+                          ]
+                        : [
+                            Row(
+                              children: [
+                                for (var i = 0; i < steps.length; i++)
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 15,
+                                          backgroundColor: i == _step
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme
+                                                  .surfaceContainerHighest,
+                                          foregroundColor: i == _step
+                                              ? theme.colorScheme.onPrimary
+                                              : theme.colorScheme.onSurface,
+                                          child: Text('${i + 1}'),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(steps[i],
+                                            textAlign: TextAlign.center),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(steps[i], textAlign: TextAlign.center),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Form(
+                              key: _form,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (_step == 0) ...[
+                                    Text('إيه المشكلة؟',
+                                        style: theme.textTheme.headlineSmall),
+                                    const SizedBox(height: 12),
+                                    _field(_description, 'وصف المشكلة', 2000,
+                                        lines: 4),
+                                  ],
+                                  if (_step == 1) ...[
+                                    Text('فين ومتى؟',
+                                        style: theme.textTheme.headlineSmall),
+                                    const SizedBox(height: 12),
+                                    const Text('المنصورة، الدقهلية'),
+                                    const SizedBox(height: 12),
+                                    _field(_district, 'المنطقة', 100),
+                                    const SizedBox(height: 12),
+                                    _field(
+                                        _address, 'الشارع ورقم العمارة', 300),
+                                    const SizedBox(height: 12),
+                                    OutlinedButton.icon(
+                                      onPressed: _pickAppointment,
+                                      icon: const Icon(
+                                          Icons.calendar_today_outlined),
+                                      label: Text(_appointment == null
+                                          ? 'اختيار موعد (اختياري)'
+                                          : _appointmentLabel(context)),
+                                    ),
+                                    if (_appointment != null)
+                                      TextButton(
+                                        onPressed: () => setState(() {
+                                          _appointment = null;
+                                          _error = null;
+                                        }),
+                                        child: const Text('أقرب موعد متاح'),
+                                      ),
+                                  ],
+                                  if (_step == 2) ...[
+                                    Text('راجع طلبك',
+                                        style: theme.textTheme.headlineSmall),
+                                    const SizedBox(height: 12),
+                                    Card(
+                                      child: Column(
+                                        children: [
+                                          ListTile(
+                                              title: const Text('الخدمة'),
+                                              subtitle:
+                                                  Text(widget.service.name)),
+                                          ListTile(
+                                              title: const Text('المشكلة'),
+                                              subtitle: Text(
+                                                  _description.text.trim())),
+                                          ListTile(
+                                              title: const Text('المكان'),
+                                              subtitle: Text(
+                                                  '${_district.text.trim()}، ${_address.text.trim()}')),
+                                          ListTile(
+                                              title:
+                                                  const Text('الموعد المفضل'),
+                                              subtitle: Text(
+                                                  _appointmentLabel(context))),
+                                        ],
+                                      ),
+                                    ),
+                                    if (!session.isConfigured)
+                                      const Text(
+                                          'إرسال الطلب متاح عند تهيئة الاتصال ببيئة الاختبار.'),
+                                  ],
                                 ],
                               ),
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Form(
-                        key: _form,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_step == 0) ...[
-                              Text('إيه المشكلة؟',
-                                  style: theme.textTheme.headlineSmall),
-                              const SizedBox(height: 12),
-                              _field(_description, 'وصف المشكلة', 2000,
-                                  lines: 4),
-                            ],
-                            if (_step == 1) ...[
-                              Text('فين ومتى؟',
-                                  style: theme.textTheme.headlineSmall),
-                              const SizedBox(height: 12),
-                              const Text('المنصورة، الدقهلية'),
-                              const SizedBox(height: 12),
-                              _field(_district, 'المنطقة', 100),
-                              const SizedBox(height: 12),
-                              _field(_address, 'الشارع ورقم العمارة', 300),
-                              const SizedBox(height: 12),
-                              OutlinedButton.icon(
-                                onPressed: _pickAppointment,
-                                icon: const Icon(Icons.calendar_today_outlined),
-                                label: Text(_appointment == null
-                                    ? 'اختيار موعد (اختياري)'
-                                    : _appointmentLabel(context)),
+                            if (_error != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(_error!,
+                                    style: TextStyle(
+                                        color: theme.colorScheme.error)),
                               ),
-                              if (_appointment != null)
-                                TextButton(
-                                  onPressed: () => setState(() {
-                                    _appointment = null;
-                                    _error = null;
-                                  }),
-                                  child: const Text('أقرب موعد متاح'),
-                                ),
-                            ],
-                            if (_step == 2) ...[
-                              Text('راجع طلبك',
-                                  style: theme.textTheme.headlineSmall),
-                              const SizedBox(height: 12),
-                              Card(
-                                child: Column(
-                                  children: [
-                                    ListTile(
-                                        title: const Text('الخدمة'),
-                                        subtitle: Text(widget.service.name)),
-                                    ListTile(
-                                        title: const Text('المشكلة'),
-                                        subtitle:
-                                            Text(_description.text.trim())),
-                                    ListTile(
-                                        title: const Text('المكان'),
-                                        subtitle: Text(
-                                            '${_district.text.trim()}، ${_address.text.trim()}')),
-                                    ListTile(
-                                        title: const Text('الموعد المفضل'),
-                                        subtitle:
-                                            Text(_appointmentLabel(context))),
-                                  ],
-                                ),
+                            const SizedBox(height: 20),
+                            if (_submitting) const LinearProgressIndicator(),
+                            FilledButton(
+                              onPressed: _submitting ||
+                                      _savingDraft ||
+                                      (_step == 2 && !session.isConfigured)
+                                  ? null
+                                  : _step == 2
+                                      ? _submit
+                                      : () {
+                                          if (_form.currentState!.validate()) {
+                                            _goTo(_step + 1);
+                                          }
+                                        },
+                              child: Text(_step == 0
+                                  ? 'متابعة'
+                                  : _step == 1
+                                      ? 'مراجعة الطلب'
+                                      : session.isSignedIn
+                                          ? 'إرسال الطلب'
+                                          : 'متابعة برقم الهاتف'),
+                            ),
+                            if (_submissionId == null)
+                              OutlinedButton(
+                                onPressed: _savingDraft || _submitting
+                                    ? null
+                                    : _saveDraft,
+                                child: const Text('حفظ كمسودة'),
                               ),
-                              if (!session.isConfigured)
-                                const Text(
-                                    'إرسال الطلب متاح عند تهيئة الاتصال ببيئة الاختبار.'),
-                            ],
+                            if (_step > 0 && _submissionId == null)
+                              TextButton(
+                                onPressed:
+                                    _submitting ? null : () => _goTo(_step - 1),
+                                child: const Text('الرجوع للتعديل'),
+                              ),
                           ],
-                        ),
-                      ),
-                      if (_error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(_error!,
-                              style: TextStyle(color: theme.colorScheme.error)),
-                        ),
-                      const SizedBox(height: 20),
-                      if (_submitting) const LinearProgressIndicator(),
-                      FilledButton(
-                        onPressed:
-                            _submitting || (_step == 2 && !session.isConfigured)
-                                ? null
-                                : _step == 2
-                                    ? _submit
-                                    : () {
-                                        if (_form.currentState!.validate()) {
-                                          _goTo(_step + 1);
-                                        }
-                                      },
-                        child: Text(_step == 0
-                            ? 'متابعة'
-                            : _step == 1
-                                ? 'مراجعة الطلب'
-                                : session.isSignedIn
-                                    ? 'إرسال الطلب'
-                                    : 'متابعة برقم الهاتف'),
-                      ),
-                      if (_step > 0 && _submissionId == null)
-                        TextButton(
-                          onPressed:
-                              _submitting ? null : () => _goTo(_step - 1),
-                          child: const Text('الرجوع للتعديل'),
-                        ),
-                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
