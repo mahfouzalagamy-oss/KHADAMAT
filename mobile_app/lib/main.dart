@@ -33,8 +33,15 @@ class KhadamatOfficialApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.build(state.currentRole),
           initialRoute: AppRoutes.splash,
-          onGenerateRoute: (settings) =>
-              AppRoutes.onGenerateRoute(settings, session),
+          onGenerateInitialRoutes:
+              (_) => [
+                AppRoutes.onGenerateRoute(
+                  const RouteSettings(name: AppRoutes.splash),
+                  session,
+                ),
+              ],
+          onGenerateRoute:
+              (settings) => AppRoutes.onGenerateRoute(settings, session),
           builder: (context, child) {
             return Directionality(
               textDirection: TextDirection.rtl,
