@@ -3,7 +3,9 @@ import { useFocusEffect } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { storage } from "@/src/utils/storage";
 
-const BASE = `${process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:8000"}/api`;
+const DEFAULT_BACKEND = "https://khadamaty.mahfouzalagamy.workers.dev";
+export const BACKEND_ROOT = (process.env.EXPO_PUBLIC_BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
+const BASE = `${BACKEND_ROOT}/api`;
 export const TOKEN_KEY = "auth_token";
 
 let tokenCache: string | null = null;
@@ -29,7 +31,7 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
   } catch {
-    throw new ApiError("لا يوجد اتصال بالإنترنت", 0);
+    throw new ApiError("لا يوجد اتصال بالإنترنت أو تعذر الوصول للخادم", 0);
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

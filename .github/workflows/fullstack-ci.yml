@@ -76,7 +76,7 @@ jobs:
       - name: Install Expo Dependencies, Verify JS Bundle & Build Signed Test APK
         working-directory: ./frontend
         env:
-          EXPO_PUBLIC_BACKEND_URL: https://api.khadamat.app
+          EXPO_PUBLIC_BACKEND_URL: ${{ vars.BACKEND_URL || 'https://khadamaty.mahfouzalagamy.workers.dev' }}
           NODE_OPTIONS: "--max-old-space-size=4096"
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |

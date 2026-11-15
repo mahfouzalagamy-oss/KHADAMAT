@@ -1,10 +1,9 @@
 import { Platform } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { storage } from "@/src/utils/storage";
-import { TOKEN_KEY } from "@/src/api";
+import { BACKEND_ROOT, TOKEN_KEY } from "@/src/api";
 import { uploadForm } from "@/src/utils/upload";
 
-const BACKEND_ROOT = process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:8000";
 const UPLOAD_ENDPOINT = `${BACKEND_ROOT}/api/uploads`;
 
 export function resolveMediaUrl(path?: string | null): string {
