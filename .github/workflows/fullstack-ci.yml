@@ -67,20 +67,56 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Pre-installed Android SDK Licenses
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
 
-      - name: Install Expo Dependencies & Prebuild Android
+      - name: Install Expo Dependencies, Prebuild & Sign Android APK + AAB
         working-directory: ./frontend
         env:
           EXPO_PUBLIC_BACKEND_URL: https://api.khadamat.app
         run: |
           corepack enable
           yarn install
+          npx expo install expo-image-picker
           npx expo prebuild --platform android --non-interactive
           keytool -genkeypair -keystore android/app/upload-keystore.jks -alias khadamat_key -keyalg RSA -keysize 2048 -validity 10000 -storepass Khadamat2026! -keypass Khadamat2026! -dname "CN=KHADAMAT Official, OU=Engineering, O=KHADAMAT, L=Mansoura, S=Dakahlia, C=EG"
           if [ -f android/app/build.gradle ]; then
-            sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.create("release") { storeFile file("upload-keystore.jks"); storePassword "Khadamat2026!"; keyAlias "khadamat_key"; keyPassword "Khadamat2026!" }/g' android/app/build.gradle
+            python3 -c '
+p = "android/app/build.gradle"
+s = open(p).read()
+s = s.replace("signingConfigs {", """signingConfigs {
+        release {
+            storeFile file("upload-keystore.jks")
+            storePassword "Khadamat2026!"
+            keyAlias "khadamat_key"
+            keyPassword "Khadamat2026!"
+        }""")
+parts = s.split("signingConfig signingConfigs.debug")
+if len(parts) >= 3:
+    s = parts[0] + "signingConfig signingConfigs.debug" + parts[1] + "signingConfig signingConfigs.release" + "signingConfig signingConfigs.debug".join(parts[2:])
+elif len(parts) == 2:
+    s = parts[0] + "signingConfig signingConfigs.release" + parts[1]
+open(p, "w").write(s)
+'
+          fi
+          if [ -f android/app/build.gradle.kts ]; then
+            python3 -c '
+p = "android/app/build.gradle.kts"
+s = open(p).read()
+s = s.replace("signingConfigs {", """signingConfigs {
+        create("release") {
+            storeFile = file("upload-keystore.jks")
+            storePassword = "Khadamat2026!"
+            keyAlias = "khadamat_key"
+            keyPassword = "Khadamat2026!"
+        }""")
+parts = s.split("signingConfig = signingConfigs.getByName(\"debug\")")
+if len(parts) >= 3:
+    s = parts[0] + "signingConfig = signingConfigs.getByName(\"debug\")" + parts[1] + "signingConfig = signingConfigs.getByName(\"release\")" + "signingConfig = signingConfigs.getByName(\"debug\")".join(parts[2:])
+open(p, "w").write(s)
+'
           fi
           cd android
           chmod +x gradlew
