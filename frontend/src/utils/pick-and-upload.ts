@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { storage } from "@/src/utils/storage";
 import { TOKEN_KEY } from "@/src/api";
 import { uploadForm } from "@/src/utils/upload";
@@ -43,13 +44,12 @@ export async function pickAndUploadImage(): Promise<string | null> {
     });
   }
 
-  const ImagePicker = await import("expo-image-picker");
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (perm.status !== "granted") {
     throw new Error("يرجى السماح بالوصول إلى الصور لاختيار ملف");
   }
   const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ["images"],
     quality: 0.8,
   });
   if (result.canceled || !result.assets?.length) return null;

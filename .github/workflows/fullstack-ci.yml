@@ -56,7 +56,7 @@ jobs:
       - name: Checkout KHADAMAT Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -73,16 +73,17 @@ jobs:
           printf "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
           printf "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
 
-      - name: Install Expo Dependencies, Prebuild & Sign Android APK + AAB
+      - name: Install Expo Dependencies, Verify JS Bundle & Sign Android APK + AAB
         working-directory: ./frontend
         env:
           EXPO_PUBLIC_BACKEND_URL: https://api.khadamat.app
-          ORG_GRADLE_PROJECT_org_gradle_jvmargs: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           corepack enable
           yarn install
           npx expo install expo-image-picker
           python3 scripts/sign-android.py assets
+          npx expo export --platform android --output-dir /tmp/expo-bundle-check
           npx expo prebuild --platform android --non-interactive
           python3 scripts/sign-android.py sign
           cd android

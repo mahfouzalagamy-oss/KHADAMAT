@@ -1,12 +1,13 @@
-import os
 import struct
 import subprocess
+import urllib.request
 import zlib
 from pathlib import Path
 
 
 def make_solid_png(width: int, height: int, rgba: tuple[int, int, int, int]) -> bytes:
     raw_rows = b"".join(b"\x00" + bytes(rgba) * width for _ in range(height))
+
     def chunk(tag: bytes, data: bytes) -> bytes:
         return struct.pack("!I", len(data)) + tag + data + struct.pack("!I", zlib.crc32(tag + data) & 0xFFFFFFFF)
 
@@ -23,9 +24,23 @@ def ensure_valid_assets(frontend_dir: Path) -> None:
         if not target.exists() or target.stat().st_size < 100:
             target.write_bytes(png_512)
 
+    fonts_dir = frontend_dir / "assets" / "fonts"
+    fonts_dir.mkdir(parents=True, exist_ok=True)
+    cairo = fonts_dir / "Cairo.ttf"
+    if not cairo.exists() or cairo.stat().st_size < 1000:
+        url = "https://raw.githubusercontent.com/google/fonts/main/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf"
+        urllib.request.urlretrieve(url, str(cairo))
+
 
 def configure_release_signing(frontend_dir: Path) -> None:
-    app_dir = frontend_dir / "android" / "app"
+    android_dir = frontend_dir / "android"
+    gradle_props = android_dir / "gradle.properties"
+    if gradle_props.exists():
+        props = gradle_props.read_text(encoding="utf-8")
+        props = props.replace("-Xmx2048m", "-Xmx4096m").replace("-XX:MaxMetaspaceSize=512m", "-XX:MaxMetaspaceSize=1024m")
+        gradle_props.write_text(props, encoding="utf-8")
+
+    app_dir = android_dir / "app"
     keystore = app_dir / "upload-keystore.jks"
     if not keystore.exists():
         subprocess.run(
@@ -46,7 +61,7 @@ def configure_release_signing(frontend_dir: Path) -> None:
     gradle_groovy = app_dir / "build.gradle"
     if gradle_groovy.exists():
         text = gradle_groovy.read_text(encoding="utf-8")
-        if "storeFile file(\"upload-keystore.jks\")" not in text:
+        if 'storeFile file("upload-keystore.jks")' not in text:
             text = text.replace(
                 "signingConfigs {",
                 'signingConfigs {\n        release {\n            storeFile file("upload-keystore.jks")\n            storePassword "Khadamat2026!"\n            keyAlias "khadamat_key"\n            keyPassword "Khadamat2026!"\n        }',
