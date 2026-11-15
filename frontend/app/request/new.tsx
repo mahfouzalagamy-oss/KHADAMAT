@@ -6,7 +6,9 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";`nimport { api, useApi } from "@/src/api";`nimport { pickAndUploadImage, resolveMediaUrl } from "@/src/utils/pick-and-upload";
+import { Image } from "expo-image";
+import { api, useApi } from "@/src/api";
+import { pickAndUploadImage, resolveMediaUrl } from "@/src/utils/pick-and-upload";
 import { storage } from "@/src/utils/storage";
 import { useOnline } from "@/src/net";
 import { Badge, Btn, Card, Chip, ChipRow, Field, Header, Icon, IconName, OfflineBanner, Row, Txt, useToast } from "@/src/ui";
@@ -28,7 +30,8 @@ type Draft = {
   lng: number | null;
   date: string;
   hour: number | null;
-  payment_method: "cash" | "online";`n  photos: string[];
+  payment_method: "cash" | "online";
+  photos: string[];
 };
 
 const EMPTY: Draft = {
@@ -42,7 +45,8 @@ const EMPTY: Draft = {
   lng: null,
   date: "",
   hour: null,
-  payment_method: "cash",`n  photos: [],
+  payment_method: "cash",
+  photos: [],
 };
 
 const ymd = (d: Date) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -61,7 +65,8 @@ export default function NewRequest() {
   const [restored, setRestored] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [ai, setAi] = useState<any>(null);
-  const [aiBusy, setAiBusy] = useState(false);`n  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loc, setLoc] = useState<"idle" | "explain" | "loading" | "denied" | "blocked">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,7 +169,8 @@ export default function NewRequest() {
           lat: d.lat,
           lng: d.lng,
           scheduled_at: at.toISOString(),
-          payment_method: d.payment_method,`n          photos: d.photos,
+          payment_method: d.payment_method,
+          photos: d.photos,
         },
       });
       await storage.removeItem(DRAFT_KEY);

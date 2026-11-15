@@ -122,7 +122,8 @@ export default function AdminHome() {
                   <Txt variant="caption" color={colors.muted}>
                     الرقم القومي
                   </Txt>
-                  {t.id_front_url || t.id_back_url ? <Txt variant="caption" color={colors.brand}>مرفقات الهوية: {t.id_front_url ? "الوجه الأمامي ✓ " : ""}{t.id_back_url ? "الوجه الخلفي ✓" : ""}</Txt> : null}`n                  <Txt weight="700" testID={`admin-identity-nid-${t.user_id}`}>
+                  {t.id_front_url || t.id_back_url ? <Txt variant="caption" color={colors.brand}>مرفقات الهوية: {t.id_front_url ? "الوجه الأمامي ✓ " : ""}{t.id_back_url ? "الوجه الخلفي ✓" : ""}</Txt> : null}
+                  <Txt weight="700" testID={`admin-identity-nid-${t.user_id}`}>
                     {t.national_id}
                   </Txt>
                 </Card>
