@@ -417,3 +417,18 @@ class TestPaymobFawryGateway:
         assert wh.status_code == 200
         dash = requests.get(f"{BASE}/tech/dashboard", headers=th, timeout=20).json()
         assert dash["subscription_active"] is True
+
+class TestPushNotifications:
+    def test_register_and_list_device_push_token(self):
+        sample_token = "fcm_test_token_khadamat_android_2026_abcdef123456"
+        r = requests.post(
+            f"{BASE}/devices/push-token",
+            json={"token": sample_token, "platform": "android"},
+            headers=S["cust_h"],
+            timeout=20,
+        )
+        assert r.status_code == 200, r.text
+        assert r.json()["ok"] is True
+
+        lst = requests.get(f"{BASE}/devices/push-token", headers=S["cust_h"], timeout=20).json()
+        assert any(d["token"] == sample_token and d["platform"] == "android" for d in lst)

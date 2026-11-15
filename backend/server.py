@@ -882,6 +882,35 @@ async def seed():
 
 from uploads_router import build_uploads_router
 from payments_router import build_payments_router
+
+
+class PushTokenIn(BaseModel):
+    token: str = Field(min_length=10, max_length=500)
+    platform: Literal["android", "ios", "web"] = "android"
+
+
+@api.post("/devices/push-token")
+async def register_push_token(body: PushTokenIn, user: dict = Depends(current_user)):
+    await db.device_tokens.update_one(
+        {"user_id": user["id"], "token": body.token},
+        {
+            "$set": {
+                "user_id": user["id"],
+                "role": user["role"],
+                "token": body.token,
+                "platform": body.platform,
+                "updated_at": now_iso(),
+            }
+        },
+        upsert=True,
+    )
+    return {"ok": True, "platform": body.platform}
+
+
+@api.get("/devices/push-token")
+async def list_my_push_tokens(user: dict = Depends(current_user)):
+    return await db.device_tokens.find({"user_id": user["id"]}, NO_ID).to_list(20)
+
 app.include_router(api)
 app.include_router(build_payments_router(db, current_user, notify, PLANS))
 app.include_router(build_uploads_router(current_user))

@@ -10,6 +10,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/src/components/error-boundary";
 import { queryClient } from "@/src/query-client";
 import { AuthProvider } from "@/src/auth";
+import { PushNotificationsManager } from "@/src/notifications";
 import { ToastProvider } from "@/src/ui";
 import { colors } from "@/src/theme";
 
@@ -29,6 +30,7 @@ export default function RootLayout() {
             <KeyboardProvider>
               <AuthProvider>
                 <ToastProvider>
+                  <PushNotificationsManager />
                   <StatusBar style="dark" />
                   <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }} />
                 </ToastProvider>
