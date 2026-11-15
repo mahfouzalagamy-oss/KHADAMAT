@@ -751,22 +751,7 @@ async def tech_invoices(user: dict = Depends(require("technician"))):
     return await db.invoices.find({"technician_id": user["id"]}, NO_ID).sort("created_at", -1).to_list(100)
 
 
-# ---------------------------------------------------------------- payments
-def gateway_configured() -> bool:
-    return bool(os.environ.get("PAYMENT_GATEWAY_API_KEY"))
-
-
-@api.get("/payments/config")
-async def payments_config():
-    return {"online_enabled": gateway_configured(), "provider": os.environ.get("PAYMENT_GATEWAY_PROVIDER"),
-            "cash_enabled": True, "currency": "EGP"}
-
-
-@api.post("/payments/checkout")
-async def checkout(body: CheckoutIn, user: dict = Depends(current_user)):
-    if not gateway_configured():
-        raise HTTPException(503, "الدفع الإلكتروني غير مفعل بعد، استخدم الدفع النقدي")
-    raise HTTPException(501, "بوابة الدفع قيد الإعداد")
+# payments routes handled by payments_router.py
 
 
 # ---------------------------------------------------------------- company
@@ -896,7 +881,9 @@ async def seed():
 
 
 from uploads_router import build_uploads_router
+from payments_router import build_payments_router
 app.include_router(api)
+app.include_router(build_payments_router(db, current_user, notify, PLANS))
 app.include_router(build_uploads_router(current_user))
 app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=["*"],
                    allow_methods=["*"], allow_headers=["*"])

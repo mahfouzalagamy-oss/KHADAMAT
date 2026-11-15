@@ -1,4 +1,4 @@
-name: KHADAMAT Emergent Full-Stack CI (FastAPI + MongoDB + Pytest)
+name: KHADAMAT Full-Stack CI & Signed Android Release
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Full KHADAMAT Pytest Regression Suite (21 Tests)
+      - name: Run Full KHADAMAT Pytest Regression Suite (31 Tests)
         working-directory: ./backend
         env:
           MONGO_URL: mongodb://127.0.0.1:27017
@@ -39,6 +39,7 @@ jobs:
           DEMO_OTP: "123456"
           DEMO_AUTO_OFFERS: "true"
           EMERGENT_LLM_KEY: ""
+          PAYMENT_GATEWAY_API_KEY: ""
           EXPO_PUBLIC_BACKEND_URL: http://127.0.0.1:8000
         run: |
           uvicorn server:app --host 127.0.0.1 --port 8000 &
@@ -46,7 +47,53 @@ jobs:
           curl -f http://127.0.0.1:8000/health
           pytest tests/test_backend.py -v
 
-      - name: Verify Frontend Expo Structure & TypeScript Files
+  build-signed-android-release:
+    needs: backend-regression-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout KHADAMAT Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Expo Dependencies & Prebuild Android
         working-directory: ./frontend
+        env:
+          EXPO_PUBLIC_BACKEND_URL: https://api.khadamat.app
         run: |
-          ls -la app src src/screens src/components src/utils
+          corepack enable
+          yarn install
+          npx expo prebuild --platform android --non-interactive
+          keytool -genkeypair -keystore android/app/upload-keystore.jks -alias khadamat_key -keyalg RSA -keysize 2048 -validity 10000 -storepass Khadamat2026! -keypass Khadamat2026! -dname "CN=KHADAMAT Official, OU=Engineering, O=KHADAMAT, L=Mansoura, S=Dakahlia, C=EG"
+          if [ -f android/app/build.gradle ]; then
+            sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.create("release") { storeFile file("upload-keystore.jks"); storePassword "Khadamat2026!"; keyAlias "khadamat_key"; keyPassword "Khadamat2026!" }/g' android/app/build.gradle
+          fi
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease
+
+      - name: Upload Signed Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: khadamat-expo-signed-apk
+          path: frontend/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Signed Google Play AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: khadamat-expo-signed-aab
+          path: frontend/android/app/build/outputs/bundle/release/app-release.aab

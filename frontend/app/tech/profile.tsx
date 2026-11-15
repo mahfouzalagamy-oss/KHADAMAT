@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useQueryClient } from "@tanstack/react-query";
@@ -225,7 +225,7 @@ export default function TechProfile() {
                 icon="card"
                 label={pay.data?.online_enabled ? "ادفع إلكترونيًا" : "الدفع الإلكتروني قريبًا"}
                 disabled={!pay.data?.online_enabled}
-                onPress={() => act("pay", () => api("/payments/checkout", { body: { kind: "invoice", ref_id: unpaid.id } }), "")}
+                onPress={() => act("pay", async () => { const res = await api("/payments/checkout", { body: { kind: "invoice", ref_id: unpaid.id, provider: "paymob" } }); if (res?.checkout_url) await Linking.openURL(res.checkout_url); }, "تم إنشاء رابط الدفع الإلكتروني")}
               />
             </View>
           ) : null}

@@ -337,3 +337,83 @@ class TestUploads:
         )
         assert kyc_res.status_code == 200, kyc_res.text
         assert kyc_res.json()["id_front_url"] == photo_url
+
+class TestPaymobFawryGateway:
+    def test_booking_checkout_and_hmac_webhook(self):
+        sandbox_headers = {**S["cust_h"], "X-Sandbox-Gateway-Key": "sandbox-paymob-2026"}
+        cfg = requests.get(f"{BASE}/payments/config", headers=sandbox_headers, timeout=20).json()
+        assert cfg["online_enabled"] is True
+        assert "paymob" in cfg["providers"]
+
+        co = requests.post(
+            f"{BASE}/payments/checkout",
+            json={"kind": "booking", "ref_id": S["rid"], "provider": "paymob"},
+            headers=sandbox_headers,
+            timeout=20,
+        )
+        assert co.status_code == 200, co.text
+        data = co.json()
+        assert data["checkout_url"].startswith("https://accept.paymob.com/")
+
+        bad_wh = requests.post(
+            f"{BASE}/payments/webhook",
+            json={
+                "merchant_order_id": data["merchant_order_id"],
+                "status": "PAID",
+                "transaction_id": "TXN-BAD-001",
+                "hmac": "invalid-signature",
+            },
+            timeout=20,
+        )
+        assert bad_wh.status_code == 403
+
+        ok_wh = requests.post(
+            f"{BASE}/payments/webhook",
+            json={
+                "merchant_order_id": data["merchant_order_id"],
+                "status": "PAID",
+                "transaction_id": "TXN-PAYMOB-9981",
+                "hmac": data["sandbox_hmac"],
+            },
+            timeout=20,
+        )
+        assert ok_wh.status_code == 200, ok_wh.text
+        assert ok_wh.json()["status"] == "paid"
+
+        det = requests.get(f"{BASE}/requests/{S['rid']}", headers=S["cust_h"], timeout=20).json()
+        assert det["payment"]["status"] == "collected"
+        assert det["payment"]["method"] == "paymob"
+        assert det["payment"]["transaction_id"] == "TXN-PAYMOB-9981"
+
+    def test_invoice_checkout_and_subscription_activation(self):
+        th, tu = login(rand_phone("0129"), "technician", "TEST_فني_دفع")
+        CREATED["users"].append(tu["id"])
+        inv_res = requests.post(f"{BASE}/tech/subscribe", json={"plan": "monthly"}, headers=th, timeout=20)
+        assert inv_res.status_code == 200
+        inv = inv_res.json()
+        CREATED["invoices"].append(inv["id"])
+
+        sandbox_headers = {**th, "X-Sandbox-Gateway-Key": "sandbox-paymob-2026"}
+        co = requests.post(
+            f"{BASE}/payments/checkout",
+            json={"kind": "invoice", "ref_id": inv["id"], "provider": "fawry"},
+            headers=sandbox_headers,
+            timeout=20,
+        )
+        assert co.status_code == 200, co.text
+        pay_data = co.json()
+        assert "fawry" in pay_data["checkout_url"].lower()
+
+        wh = requests.post(
+            f"{BASE}/payments/webhook",
+            json={
+                "merchant_order_id": pay_data["merchant_order_id"],
+                "status": "PAID",
+                "transaction_id": "FAWRY-77412",
+                "hmac": pay_data["sandbox_hmac"],
+            },
+            timeout=20,
+        )
+        assert wh.status_code == 200
+        dash = requests.get(f"{BASE}/tech/dashboard", headers=th, timeout=20).json()
+        assert dash["subscription_active"] is True
