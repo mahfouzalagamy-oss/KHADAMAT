@@ -1,10 +1,20 @@
 import { useCallback } from "react";
+import { Platform } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { storage } from "@/src/utils/storage";
 
-const DEFAULT_BACKEND = "https://khadamaty.mahfouzalagamy.workers.dev";
-export const BACKEND_ROOT = (process.env.EXPO_PUBLIC_BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
+function resolveBackendRoot(): string {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://127.0.0.1:8000";
+    }
+  }
+  return process.env.EXPO_PUBLIC_BACKEND_URL || "https://khadamaty.mahfouzalagamy.workers.dev";
+}
+
+export const BACKEND_ROOT = resolveBackendRoot().replace(/\/+$/, "");
 const BASE = `${BACKEND_ROOT}/api`;
 export const TOKEN_KEY = "auth_token";
 
@@ -31,7 +41,11 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
   } catch {
-    throw new ApiError("لا يوجد اتصال بالإنترنت أو تعذر الوصول للخادم", 0);
+    throw new ApiError("لا يوجد اتصال بالإنترنت أو تأكد من تشغيل الخادم المحلي", 0);
+  }
+  if (res.status === 401 && path !== "/auth/me") {
+    tokenCache = null;
+    await storage.secureDel(TOKEN_KEY);
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -47,6 +61,7 @@ export function useApi<T = any>(path: string | null, poll?: number) {
     queryFn: () => api<T>(path as string),
     enabled: !!path,
     refetchInterval: poll,
+    retry: false,
   });
   const { refetch } = q;
   useFocusEffect(
