@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, useApi } from "@/src/api";
+import { pickAndUploadImage } from "@/src/utils/pick-and-upload";
 import { Badge, Btn, Card, Field, Header, Icon, IconName, Loading, Row, SectionTitle, Txt, useToast } from "@/src/ui";
 import { useTheme } from "@/src/theme";
 import { dateTimeFmt, egp, IDENTITY } from "@/src/format";
@@ -23,6 +24,8 @@ export default function TechProfile() {
   const [bio, setBio] = useState("");
   const [idName, setIdName] = useState("");
   const [nid, setNid] = useState("");
+  const [frontUrl, setFrontUrl] = useState<string | null>(null);
+  const [backUrl, setBackUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,6 +43,22 @@ export default function TechProfile() {
       qc.invalidateQueries();
     } catch (e: any) {
       toast(e.message, "error");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const uploadDoc = async (side: "front" | "back") => {
+    setBusy(`up-${side}`);
+    try {
+      const url = await pickAndUploadImage();
+      if (url) {
+        if (side === "front") setFrontUrl(url);
+        else setBackUrl(url);
+        toast("تم رفع صورة البطاقة بنجاح");
+      }
+    } catch (e: any) {
+      toast(e.message || "تعذر رفع الصورة", "error");
     } finally {
       setBusy(null);
     }
@@ -67,24 +86,55 @@ export default function TechProfile() {
               <Txt style={{ flex: 1 }}>هويتك موثقة، العملاء بيشوفوا علامة «فني موثق» على عروضك.</Txt>
             </Row>
           ) : p.identity_status === "pending" ? (
-            <Txt color={colors.onSurfaceSecondary}>بياناتك تحت المراجعة من فريق خدمات. هيوصلك إشعار بالنتيجة.</Txt>
+            <Txt color={colors.onSurfaceSecondary}>بياناتك وصور البطاقة تحت المراجعة من فريق خدمات. هيوصلك إشعار بالنتيجة.</Txt>
           ) : (
             <>
               {p.identity_status === "rejected" && p.review_note ? (
                 <Txt color={colors.error}>سبب الرفض: {p.review_note}</Txt>
               ) : null}
               <Txt variant="caption" color={colors.muted}>
-                أدخل بياناتك كما في بطاقة الرقم القومي. البيانات بتراجعها الإدارة فقط.
+                أدخل بياناتك كما في بطاقة الرقم القومي وارفع صورة الوجه الأمامي والخلفي للبطاقة.
               </Txt>
               <Field testID="tech-identity-name-input" label="الاسم رباعي" value={idName} onChangeText={setIdName} />
               <Field testID="tech-identity-nid-input" label="الرقم القومي (14 رقم)" keyboardType="number-pad" maxLength={14} value={nid} onChangeText={setNid} />
+              <Row gap={8}>
+                <Btn
+                  testID="tech-identity-upload-front"
+                  small
+                  variant={frontUrl ? "soft" : "outline"}
+                  icon={frontUrl ? "checkmark-circle" : "camera"}
+                  label={frontUrl ? "وجه البطاقة ✓" : "رفع وجه البطاقة"}
+                  loading={busy === "up-front"}
+                  onPress={() => uploadDoc("front")}
+                  style={{ flex: 1 }}
+                />
+                <Btn
+                  testID="tech-identity-upload-back"
+                  small
+                  variant={backUrl ? "soft" : "outline"}
+                  icon={backUrl ? "checkmark-circle" : "camera"}
+                  label={backUrl ? "ظهر البطاقة ✓" : "رفع ظهر البطاقة"}
+                  loading={busy === "up-back"}
+                  onPress={() => uploadDoc("back")}
+                  style={{ flex: 1 }}
+                />
+              </Row>
               <Btn
                 testID="tech-identity-submit-button"
                 label="إرسال للمراجعة"
                 icon="send"
                 disabled={idName.trim().length < 5 || !/^[23]\d{13}$/.test(nid)}
                 loading={busy === "id"}
-                onPress={() => act("id", () => api("/tech/identity", { body: { full_name: idName, national_id: nid } }), "تم إرسال بياناتك للمراجعة")}
+                onPress={() =>
+                  act(
+                    "id",
+                    () =>
+                      api("/tech/identity", {
+                        body: { full_name: idName, national_id: nid, id_front_url: frontUrl, id_back_url: backUrl },
+                      }),
+                    "تم إرسال بياناتك وصور الهوية للمراجعة",
+                  )
+                }
               />
             </>
           )}

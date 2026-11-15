@@ -255,6 +255,7 @@ class RequestIn(BaseModel):
     lng: Optional[float] = None
     scheduled_at: str
     payment_method: Literal["cash", "online"] = "cash"
+    photos: List[str] = Field(default_factory=list, max_length=6)
 
 
 class OfferIn(BaseModel):
@@ -286,6 +287,8 @@ class TechProfileIn(BaseModel):
 class IdentityIn(BaseModel):
     full_name: str = Field(min_length=5, max_length=80)
     national_id: str = Field(pattern=r"^[23][0-9]{13}$")
+    id_front_url: Optional[str] = None
+    id_back_url: Optional[str] = None
 
 
 class SubscribeIn(BaseModel):
@@ -481,7 +484,7 @@ async def create_request(body: RequestIn, user: dict = Depends(require("customer
         "service_id": svc["id"] if svc else None, "service_name": svc["name"] if svc else "مشكلة مخصصة",
         "price_min": svc["price_min"] if svc else None, "price_max": svc["price_max"] if svc else None,
         "description": body.description, "urgency": body.urgency, "area": body.area, "address": body.address,
-        "lat": body.lat, "lng": body.lng, "scheduled_at": body.scheduled_at, "payment_method": body.payment_method,
+        "lat": body.lat, "lng": body.lng, "photos": body.photos[:6], "scheduled_at": body.scheduled_at, "payment_method": body.payment_method,
         "status": "open", "technician_id": None, "technician_name": None, "technician_phone": None,
         "company_id": None, "price": None, "offer_id": None, "review": None,
         "timeline": [{"status": "open", "at": now_iso()}], "created_at": now_iso(),
@@ -716,6 +719,7 @@ async def submit_identity(body: IdentityIn, user: dict = Depends(require("techni
         raise HTTPException(400, "هويتك موثقة بالفعل")
     await db.technicians.update_one({"user_id": user["id"]}, {"$set": {
         "identity_status": "pending", "national_id": body.national_id, "identity_name": body.full_name,
+        "id_front_url": body.id_front_url, "id_back_url": body.id_back_url,
         "identity_submitted_at": now_iso(), "review_note": ""}})
     return await tech_profile(user["id"])
 

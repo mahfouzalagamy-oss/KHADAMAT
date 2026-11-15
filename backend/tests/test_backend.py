@@ -291,3 +291,49 @@ class TestUploads:
             timeout=20,
         )
         assert r.status_code == 422
+    def test_attach_uploaded_photos_to_request_and_kyc(self):
+        png_1x1 = (
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+            b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01"
+            b"\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+        )
+        up = requests.post(
+            f"{BASE}/uploads",
+            files={"file": ("problem.png", png_1x1, "image/png")},
+            headers=S["cust_h"],
+            timeout=20,
+        )
+        assert up.status_code == 200
+        photo_url = up.json()["url"]
+
+        body = {
+            "category_id": "plumbing",
+            "description": "TEST_طلب بصورة مرفقة",
+            "urgency": "normal",
+            "area": "توريل",
+            "address": "TEST_شارع 2",
+            "scheduled_at": "2027-02-01T12:00:00",
+            "payment_method": "cash",
+            "photos": [photo_url],
+        }
+        req_res = requests.post(f"{BASE}/requests", json=body, headers=S["cust_h"], timeout=20)
+        assert req_res.status_code == 200, req_res.text
+        req_data = req_res.json()
+        CREATED["requests"].append(req_data["id"])
+        assert photo_url in req_data.get("photos", [])
+
+        th, tu = login(rand_phone("0128"), "technician", "TEST_فني_وثائق")
+        CREATED["users"].append(tu["id"])
+        kyc_res = requests.post(
+            f"{BASE}/tech/identity",
+            json={
+                "full_name": "TEST_فني موثق بالصور",
+                "national_id": "29201011234567",
+                "id_front_url": photo_url,
+                "id_back_url": photo_url,
+            },
+            headers=th,
+            timeout=20,
+        )
+        assert kyc_res.status_code == 200, kyc_res.text
+        assert kyc_res.json()["id_front_url"] == photo_url

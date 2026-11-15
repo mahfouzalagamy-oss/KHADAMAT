@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
-import { api, useApi } from "@/src/api";
+import { Image } from "expo-image";`nimport { api, useApi } from "@/src/api";`nimport { pickAndUploadImage, resolveMediaUrl } from "@/src/utils/pick-and-upload";
 import { storage } from "@/src/utils/storage";
 import { useOnline } from "@/src/net";
 import { Badge, Btn, Card, Chip, ChipRow, Field, Header, Icon, IconName, OfflineBanner, Row, Txt, useToast } from "@/src/ui";
@@ -28,7 +28,7 @@ type Draft = {
   lng: number | null;
   date: string;
   hour: number | null;
-  payment_method: "cash" | "online";
+  payment_method: "cash" | "online";`n  photos: string[];
 };
 
 const EMPTY: Draft = {
@@ -42,7 +42,7 @@ const EMPTY: Draft = {
   lng: null,
   date: "",
   hour: null,
-  payment_method: "cash",
+  payment_method: "cash",`n  photos: [],
 };
 
 const ymd = (d: Date) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -61,7 +61,7 @@ export default function NewRequest() {
   const [restored, setRestored] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [ai, setAi] = useState<any>(null);
-  const [aiBusy, setAiBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);`n  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loc, setLoc] = useState<"idle" | "explain" | "loading" | "denied" | "blocked">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,7 +164,7 @@ export default function NewRequest() {
           lat: d.lat,
           lng: d.lng,
           scheduled_at: at.toISOString(),
-          payment_method: d.payment_method,
+          payment_method: d.payment_method,`n          photos: d.photos,
         },
       });
       await storage.removeItem(DRAFT_KEY);
@@ -301,6 +301,41 @@ export default function NewRequest() {
                   </Card>
                 </Animated.View>
               ) : null}
+              <Txt variant="title">صور المشكلة (اختياري)</Txt>
+              <Row gap={8} style={{ flexWrap: "wrap" }}>
+                {(d.photos ?? []).map((u, idx) => (
+                  <Pressable
+                    key={u}
+                    testID={`wizard-photo-${idx}`}
+                    onPress={() => set({ photos: d.photos.filter((x) => x !== u) })}
+                    style={{ width: 68, height: 68, borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}
+                  >
+                    <Image source={{ uri: resolveMediaUrl(u) }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                  </Pressable>
+                ))}
+                {(d.photos?.length ?? 0) < 4 ? (
+                  <Btn
+                    testID="wizard-add-photo-button"
+                    small
+                    variant="outline"
+                    icon="camera"
+                    label="إضافة صورة"
+                    loading={uploadingPhoto}
+                    onPress={async () => {
+                      if (!online) return toast("رفع الصور يحتاج اتصال بالإنترنت", "info");
+                      setUploadingPhoto(true);
+                      try {
+                        const url = await pickAndUploadImage();
+                        if (url) set({ photos: [...(d.photos ?? []), url] });
+                      } catch (e: any) {
+                        toast(e.message || "فشل رفع الصورة", "error");
+                      } finally {
+                        setUploadingPhoto(false);
+                      }
+                    }}
+                  />
+                ) : null}
+              </Row>
               <Txt variant="title">مدى الاستعجال</Txt>
               <Row gap={12}>
                 {(

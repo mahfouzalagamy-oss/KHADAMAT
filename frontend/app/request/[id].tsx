@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
-import { api, useApi } from "@/src/api";
+import { Image } from "expo-image";`nimport { api, useApi } from "@/src/api";`nimport { resolveMediaUrl } from "@/src/utils/pick-and-upload";
 import { useAuth } from "@/src/auth";
 import { Badge, Btn, Card, Chip, ChipRow, Empty, ErrorView, Field, Header, Icon, IconName, Loading, Row, SectionTitle, Stars, Txt, useToast } from "@/src/ui";
 import { useTheme } from "@/src/theme";
@@ -180,6 +180,15 @@ export default function RequestDetail() {
         <Card style={{ gap: 12 }} testID="request-details-card">
           <SectionTitle title="تفاصيل المشكلة" />
           <Txt>{r.description}</Txt>
+          {r.photos?.length ? (
+            <Row gap={8} style={{ flexWrap: "wrap" }} testID="request-photos-row">
+              {r.photos.map((u: string, idx: number) => (
+                <View key={u + idx} style={{ width: 72, height: 72, borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}>
+                  <Image source={{ uri: resolveMediaUrl(u) }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                </View>
+              ))}
+            </Row>
+          ) : null}
           <Row gap={8} style={{ alignItems: "flex-start" }}>
             <Icon name="location" size={18} color={colors.brand} />
             <Txt style={{ flex: 1 }}>
