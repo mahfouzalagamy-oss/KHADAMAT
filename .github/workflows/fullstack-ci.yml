@@ -50,7 +50,7 @@ jobs:
   build-signed-android-release:
     needs: backend-regression-tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - name: Checkout KHADAMAT Repository
@@ -69,58 +69,25 @@ jobs:
 
       - name: Accept Pre-installed Android SDK Licenses
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
+          mkdir -p "$ANDROID_HOME/licenses"
+          printf "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
+          printf "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
 
       - name: Install Expo Dependencies, Prebuild & Sign Android APK + AAB
         working-directory: ./frontend
         env:
           EXPO_PUBLIC_BACKEND_URL: https://api.khadamat.app
+          ORG_GRADLE_PROJECT_org_gradle_jvmargs: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
         run: |
           corepack enable
           yarn install
           npx expo install expo-image-picker
+          python3 scripts/sign-android.py assets
           npx expo prebuild --platform android --non-interactive
-          keytool -genkeypair -keystore android/app/upload-keystore.jks -alias khadamat_key -keyalg RSA -keysize 2048 -validity 10000 -storepass Khadamat2026! -keypass Khadamat2026! -dname "CN=KHADAMAT Official, OU=Engineering, O=KHADAMAT, L=Mansoura, S=Dakahlia, C=EG"
-          if [ -f android/app/build.gradle ]; then
-            python3 -c '
-p = "android/app/build.gradle"
-s = open(p).read()
-s = s.replace("signingConfigs {", """signingConfigs {
-        release {
-            storeFile file("upload-keystore.jks")
-            storePassword "Khadamat2026!"
-            keyAlias "khadamat_key"
-            keyPassword "Khadamat2026!"
-        }""")
-parts = s.split("signingConfig signingConfigs.debug")
-if len(parts) >= 3:
-    s = parts[0] + "signingConfig signingConfigs.debug" + parts[1] + "signingConfig signingConfigs.release" + "signingConfig signingConfigs.debug".join(parts[2:])
-elif len(parts) == 2:
-    s = parts[0] + "signingConfig signingConfigs.release" + parts[1]
-open(p, "w").write(s)
-'
-          fi
-          if [ -f android/app/build.gradle.kts ]; then
-            python3 -c '
-p = "android/app/build.gradle.kts"
-s = open(p).read()
-s = s.replace("signingConfigs {", """signingConfigs {
-        create("release") {
-            storeFile = file("upload-keystore.jks")
-            storePassword = "Khadamat2026!"
-            keyAlias = "khadamat_key"
-            keyPassword = "Khadamat2026!"
-        }""")
-parts = s.split("signingConfig = signingConfigs.getByName(\"debug\")")
-if len(parts) >= 3:
-    s = parts[0] + "signingConfig = signingConfigs.getByName(\"debug\")" + parts[1] + "signingConfig = signingConfigs.getByName(\"release\")" + "signingConfig = signingConfigs.getByName(\"debug\")".join(parts[2:])
-open(p, "w").write(s)
-'
-          fi
+          python3 scripts/sign-android.py sign
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease bundleRelease
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Upload Signed Android APK
         uses: actions/upload-artifact@v4
