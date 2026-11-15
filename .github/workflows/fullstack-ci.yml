@@ -1,0 +1,52 @@
+name: KHADAMAT Emergent Full-Stack CI (FastAPI + MongoDB + Pytest)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  backend-regression-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout KHADAMAT Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install FastAPI & Pytest Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Full KHADAMAT Pytest Regression Suite (21 Tests)
+        working-directory: ./backend
+        env:
+          MONGO_URL: mongodb://127.0.0.1:27017
+          DB_NAME: khadamat_test_db
+          JWT_SECRET: khadamat-ci-jwt-secret-2026
+          DEMO_OTP: "123456"
+          DEMO_AUTO_OFFERS: "true"
+          EMERGENT_LLM_KEY: ""
+          EXPO_PUBLIC_BACKEND_URL: http://127.0.0.1:8000
+        run: |
+          uvicorn server:app --host 127.0.0.1 --port 8000 &
+          sleep 4
+          curl -f http://127.0.0.1:8000/health
+          pytest tests/test_backend.py -v
+
+      - name: Verify Frontend Expo Structure & TypeScript Files
+        working-directory: ./frontend
+        run: |
+          ls -la app src src/screens src/components src/utils

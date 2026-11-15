@@ -1,0 +1,40 @@
+# Dependencies & Package Caches
+node_modules/
+**/node_modules/
+.yarn/
+.pnp.*
+
+# Python & Virtual Environments
+.venv/
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+**/.pytest_cache/
+
+# Expo & Web Builds
+.expo/
+**/.expo/
+dist/
+**/dist/
+web-build/
+**/web-build/
+.metro-cache/
+**/.metro-cache/
+
+# Environment Secrets & Large Binaries
+.env
+**/.env
+!.env.example
+!**/.env.example
+*.exe
+*.dll
+*.apk
+*.aab
+*.jks
+
+# Uploaded Test Media
+backend/uploads/*
+!backend/uploads/.gitkeep
