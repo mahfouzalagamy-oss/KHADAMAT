@@ -33,8 +33,7 @@ export default function Notifications() {
           ListEmptyComponent={<Empty testID="notifications-empty" icon="notifications-off" title="مفيش إشعارات" body="هنبلغك بالعروض الجديدة وتحديثات طلباتك هنا" />}
           renderItem={({ item }) => (
             <Card
-              testID={
-otification-${item.id}`}
+              testID={`notification-${item.id}`}
               onPress={item.request_id ? () => router.push(`/request/${item.request_id}`) : undefined}
               style={{ backgroundColor: item.read ? colors.surfaceSecondary : colors.surfaceTertiary }}
             >
