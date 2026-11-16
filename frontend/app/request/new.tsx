@@ -221,45 +221,21 @@ export default function NewRequest() {
               <Txt variant="title" style={{ paddingHorizontal: 16 }}>
                 نوع الخدمة
               </Txt>
-
-            {(params.category_id || d.category_id) ? (
-              <Card
-                testID={`wizard-category-${params.category_id || d.category_id}`}
-                style={{ backgroundColor: colors.brandTertiary, borderColor: colors.brand, borderWidth: 2 }}
-              >
-                <Row style={{ justifyContent: "space-between" }}>
-                  <Row gap={10}>
-                    <Icon name={(curCat?.icon || "construct") as IconName} size={22} color={colors.brand} />
-                    <View>
-                      <Txt weight="700" color={colors.onBrandTertiary}>
-                        {curCat?.name ?? "الخدمة المختارة"}{curSrv ? ` • ${curSrv.name}` : ""}
-                      </Txt>
-                      {curSrv ? (
-                        <Txt variant="caption" color={colors.brand}>
-                          السعر الاسترشادي: {egp(curSrv.min)} - {egp(curSrv.max)}
-                        </Txt>
-                      ) : null}
-                    </View>
-                  </Row>
-                  <Badge label="الخدمة المختارة" tone="success" icon="checkmark-circle" />
-                </Row>
-              </Card>
-            ) : (
-              <ChipRow>
-                {categories.map((c: any) => (
+              <ChipRow testID="wizard-category-row">
+                {(catalog.data?.categories ?? []).map((c: any) => (
                   <Chip
                     key={c.id}
                     testID={`wizard-category-${c.id}`}
                     label={c.name}
                     icon={c.icon as IconName}
                     selected={d.category_id === c.id}
-                    onPress={() => set({ category_id: c.id, service_id: null })}
+                    onPress={() => set({ category_id: c.id, service_id: c.id === d.category_id ? d.service_id : "" })}
                   />
                 ))}
               </ChipRow>
-            )}
-
-            <Field
+            </View>
+            <View style={{ paddingHorizontal: 16, gap: 12 }}>
+              <Field
                 testID="wizard-description-input"
                 label="اوصف المشكلة"
                 placeholder="مثال: الحوض في المطبخ بيسرب مية من تحت ومش بيصرف كويس"
