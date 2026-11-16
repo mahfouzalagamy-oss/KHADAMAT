@@ -221,30 +221,21 @@ export default function NewRequest() {
               <Txt variant="title" style={{ paddingHorizontal: 16 }}>
                 نوع الخدمة
               </Txt>
-
-            <ChipRow>
-              {categories
-                .filter((c: any) => {
-                  const lockedCat = params.category_id || d.category_id;
-                  return !lockedCat || c.id === lockedCat;
-                })
-                .map((c: any) => (
+              <ChipRow testID="wizard-category-row">
+                {(catalog.data?.categories ?? []).map((c: any) => (
                   <Chip
                     key={c.id}
                     testID={`wizard-category-${c.id}`}
-                    label={curSrv?.name && d.category_id === c.id ? `${c.name} • ${curSrv.name}` : c.name}
+                    label={c.name}
                     icon={c.icon as IconName}
                     selected={d.category_id === c.id}
-                    onPress={() => {
-                      if (!params.category_id && !d.category_id) {
-                        set({ category_id: c.id, service_id: null });
-                      }
-                    }}
+                    onPress={() => set({ category_id: c.id, service_id: c.id === d.category_id ? d.service_id : "" })}
                   />
                 ))}
-            </ChipRow>
-
-            <Field
+              </ChipRow>
+            </View>
+            <View style={{ paddingHorizontal: 16, gap: 12 }}>
+              <Field
                 testID="wizard-description-input"
                 label="اوصف المشكلة"
                 placeholder="مثال: الحوض في المطبخ بيسرب مية من تحت ومش بيصرف كويس"
