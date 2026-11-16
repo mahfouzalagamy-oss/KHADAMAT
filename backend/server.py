@@ -29,7 +29,23 @@ except ImportError:
     LlmChat = None
     UserMessage = None
 
-client = AsyncIOMotorClient(os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+import socket
+
+_mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+_use_mock_db = False
+if "localhost" in _mongo_url or "127.0.0.1" in _mongo_url:
+    try:
+        with socket.create_connection(("127.0.0.1", 27017), timeout=1.0):
+            pass
+    except OSError:
+        _use_mock_db = True
+
+if _use_mock_db:
+    from mongomock_motor import AsyncMongoMockClient
+    client = AsyncMongoMockClient()
+else:
+    client = AsyncIOMotorClient(_mongo_url)
+
 db = client[os.environ.get("DB_NAME", "khadamat_db")]
 JWT_SECRET = os.environ.get("JWT_SECRET", "khadamat-secret-jwt-key-2026")
 DEMO_OTP = os.environ.get("DEMO_OTP", "123456")
@@ -931,3 +947,19 @@ async def shutdown():
     with suppress(asyncio.CancelledError):
         await app.state.index_task
     client.close()
+
+# ---------------------------------------------------------------- serve web build
+from fastapi.responses import FileResponse
+
+WEB_DIST_DIR = ROOT_DIR.parent / "frontend" / "dist"
+
+if WEB_DIST_DIR.is_dir():
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_expo_web_spa(full_path: str):
+        candidate = WEB_DIST_DIR / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        index_file = WEB_DIST_DIR / "index.html"
+        if index_file.is_file():
+            return FileResponse(index_file)
+        raise HTTPException(404, "Web build not found")
