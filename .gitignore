@@ -38,3 +38,8 @@ web-build/
 # Uploaded Test Media
 backend/uploads/*
 !backend/uploads/.gitkeep
+frontend/dist/
+frontend/.expo/
+frontend/package-lock.json
+backend/run_browser.py
+*.pyc

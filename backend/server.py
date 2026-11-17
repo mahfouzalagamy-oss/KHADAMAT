@@ -30,25 +30,32 @@ except ImportError:
     UserMessage = None
 
 import socket
-
-_mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-_use_mock_db = False
+_mongo_url = os.environ.get("MONGO_URL", "mongodb://127.0.0.1:27017")
+_use_mock = False
 if "localhost" in _mongo_url or "127.0.0.1" in _mongo_url:
     try:
-        with socket.create_connection(("127.0.0.1", 27017), timeout=1.0):
+        with socket.create_connection(("127.0.0.1", 27017), timeout=0.5):
             pass
     except OSError:
-        _use_mock_db = True
+        _use_mock = True
 
-if _use_mock_db:
+if _use_mock:
     from mongomock_motor import AsyncMongoMockClient
     client = AsyncMongoMockClient()
 else:
     client = AsyncIOMotorClient(_mongo_url)
-
 db = client[os.environ.get("DB_NAME", "khadamat_db")]
-JWT_SECRET = os.environ.get("JWT_SECRET", "khadamat-secret-jwt-key-2026")
-DEMO_OTP = os.environ.get("DEMO_OTP", "123456")
+APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
+IS_PRODUCTION = APP_ENV == "production"
+
+JWT_SECRET = os.environ.get("JWT_SECRET", "" if IS_PRODUCTION else "khadamat-dev-secret-change-in-prod-2026")
+if IS_PRODUCTION and (not JWT_SECRET or "dev-secret" in JWT_SECRET or len(JWT_SECRET) < 32):
+    raise RuntimeError("CRITICAL SECURITY ERROR: Strong JWT_SECRET env var (>=32 chars) must be set when APP_ENV=production.")
+
+ALLOW_DEMO_OTP = os.environ.get("ALLOW_DEMO_OTP", "false" if IS_PRODUCTION else "true").lower() == "true"
+DEMO_OTP = os.environ.get("DEMO_OTP", "" if IS_PRODUCTION else "123456") if ALLOW_DEMO_OTP else ""
+SEED_DEFAULT_ADMIN = os.environ.get("SEED_DEFAULT_ADMIN", "false" if IS_PRODUCTION else "true").lower() == "true"
+
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
 DEMO_AUTO_OFFERS = os.environ.get("DEMO_AUTO_OFFERS", "true") == "true"
 logger = logging.getLogger(__name__)
@@ -947,19 +954,3 @@ async def shutdown():
     with suppress(asyncio.CancelledError):
         await app.state.index_task
     client.close()
-
-# ---------------------------------------------------------------- serve web build
-from fastapi.responses import FileResponse
-
-WEB_DIST_DIR = ROOT_DIR.parent / "frontend" / "dist"
-
-if WEB_DIST_DIR.is_dir():
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_expo_web_spa(full_path: str):
-        candidate = WEB_DIST_DIR / full_path
-        if full_path and candidate.is_file():
-            return FileResponse(candidate)
-        index_file = WEB_DIST_DIR / "index.html"
-        if index_file.is_file():
-            return FileResponse(index_file)
-        raise HTTPException(404, "Web build not found")
